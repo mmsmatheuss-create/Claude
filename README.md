@@ -25,7 +25,7 @@ material) não vem preenchida. As demais colunas seguem a ordem do cabeçalho.
 | Tabela | Grão | Origem |
 |---|---|---|
 | `lojas` | 124 | `WERKS`, `WERKS_TEXT`, `REGIO` |
-| `cats` | 28 categorias em 7 setores | `HIERNODE4` dentro de `HIERNODE3` |
+| `cats` | 28 nós do 4º nível, dentro de 7 do 3º | `HIERNODE4`/`HIERNODE4_TEXT` dentro de `HIERNODE3`/`HIERNODE3_TEXT` |
 | `forn` | 104 | `LIFNR`, `LIFNR_TEXT` |
 | `prod` | 799 | `MATNR`, `MATNR_TEXT`, `MEINS`, categoria |
 | `fato` | loja × mês × produto × fornecedor | 106.018 linhas agregadas em 28.249 registros |
@@ -45,6 +45,9 @@ sem voltar à base.
   diferentes, e 5.923 linhas repetidas são mantidas (somam nos totais, como no relatório).
 - **Quantidade mistura UN e KG** (96.221 e 9.797 linhas); o painel tem filtro de unidade
   para totais homogêneos.
+- **Hierarquia de mercadoria** aparece pela denominação, não pelo código: `HIERNODE3_TEXT`
+  é a *Denominação 3º Nó* (7 nós) e `HIERNODE4_TEXT` a *Denominação 4º Nó* (28 nós). O painel
+  filtra e agrupa por qualquer um dos dois níveis.
 - Códigos de material e fornecedor perdem os zeros à esquerda; textos perdem caracteres de
   controle do export.
 

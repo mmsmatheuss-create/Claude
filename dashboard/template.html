@@ -69,7 +69,7 @@ button, select, input{font:inherit; color:inherit}
 .ctl .cnt{font-size:11px; font-weight:600; color:var(--in); font-variant-numeric:tabular-nums}
 .ctl .car{color:var(--muted); font-size:10px}
 .seg{display:inline-flex; background:var(--surface); border:1px solid var(--hair); border-radius:7px; overflow:hidden}
-.seg button{height:32px; padding:0 11px; background:none; border:0; cursor:pointer; color:var(--ink-2);
+.seg button{height:32px; padding:0 11px; white-space:nowrap; background:none; border:0; cursor:pointer; color:var(--ink-2);
   font-size:13px; border-right:1px solid var(--hair-2)}
 .seg button:last-child{border-right:0}
 .seg button:hover{background:var(--surface-2); color:var(--ink)}
@@ -121,6 +121,8 @@ button, select, input{font:inherit; color:inherit}
 .card{background:var(--surface); border:1px solid var(--hair); border-radius:12px; padding:18px 18px 14px;
   min-width:0}
 .card > header{display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:14px}
+.card > header > div:first-child{min-width:0}
+.card > header .seg{flex:none}
 .card h2{font-size:15px; font-weight:600}
 .card .cap{font-size:12px; color:var(--ink-2); margin-top:3px; max-width:64ch}
 .legend{display:flex; gap:14px; font-size:12px; color:var(--ink-2); align-items:center; flex-wrap:wrap}
@@ -212,8 +214,8 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
     </div>
     <div class="grp"><span class="grp-label">Filtros</span>
       <button type="button" class="ctl" id="f-loja" aria-expanded="false">Lojas <span class="cnt"></span><span class="car">▾</span></button>
-      <button type="button" class="ctl" id="f-grupo" aria-expanded="false">Setor <span class="cnt"></span><span class="car">▾</span></button>
-      <button type="button" class="ctl" id="f-cat" aria-expanded="false">Categoria <span class="cnt"></span><span class="car">▾</span></button>
+      <button type="button" class="ctl" id="f-grupo" aria-expanded="false">3º Nó <span class="cnt"></span><span class="car">▾</span></button>
+      <button type="button" class="ctl" id="f-cat" aria-expanded="false">4º Nó <span class="cnt"></span><span class="car">▾</span></button>
       <button type="button" class="ctl" id="f-forn" aria-expanded="false">Fornecedor <span class="cnt"></span><span class="car">▾</span></button>
       <div class="seg" id="un" role="group" aria-label="Unidade de medida">
         <button type="button" data-u="all">UN+KG</button>
@@ -258,8 +260,16 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
       <p class="cap" style="margin-top:10px">Clique em uma barra para filtrar o painel por essa loja.</p>
     </section>
     <section class="card">
-      <header><div><h2>Categorias</h2><p class="cap" id="cap-cat"></p></div></header>
+      <header>
+        <div><h2>Hierarquia de mercadoria</h2><p class="cap" id="cap-cat"></p></div>
+        <div class="seg" id="nivel" role="group" aria-label="Nível da hierarquia">
+          <button type="button" data-n="n3">3º Nó</button>
+          <button type="button" data-n="n4">4º Nó</button>
+        </div>
+      </header>
       <div id="ch-cat"></div>
+      <details class="tbl"><summary>Ver como tabela</summary>
+        <div class="mini scrollx"><table id="t-cat"></table></div></details>
     </section>
   </div>
 
@@ -301,6 +311,10 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
       <li><b>Custo líquido</b> usa <code>VERPR_LIQUIDO_TOTAL</code> e <b>custo CSGM</b> usa
         <code>VERPR_CSGM_TOTAL</code> — são custos de estoque, não preço de venda.
         <code>VERPR_BRUTO_TOTAL</code> é idêntico ao líquido em 100% das linhas e por isso não aparece como medida separada.</li>
+      <li>A hierarquia de mercadoria vem em dois níveis: <b>Denominação 3º Nó</b>
+        (<code>HIERNODE3</code>, 7 nós — PERECIVEIS, MERCEARIA ALIMENTO, BAZAR…) e
+        <b>Denominação 4º Nó</b> (<code>HIERNODE4</code>, 28 nós dentro do 3º). Os filtros e o
+        cartão de hierarquia usam a denominação, com o código ao lado.</li>
       <li>A quantidade mistura unidades <b>UN</b> e <b>KG</b>. Para um total homogêneo, use o filtro de unidade.</li>
       <li>O período vem de <code>CPUDT_MKPF</code> (data de lançamento do documento). O ano do documento
         (<code>MJAHR</code>) pode divergir e não é usado como período.</li>
@@ -330,7 +344,7 @@ PROD.forEach((p,i)=>{ P_CAT[i]=p[3]; P_GRP[i]=gIx[CAT[p[3]][2]]; P_KG[i]= p[2]==
 
 /* ---------- estado ---------- */
 const S={ m0:0, m1:MES.length-1, loja:new Set(), grupo:new Set(), cat:new Set(), forn:new Set(),
-          un:"all", medida:"qtd", visao:"liq", sort:{k:"v",d:-1}, busca:"" };
+          un:"all", medida:"qtd", visao:"liq", nivel:"n3", sort:{k:"v",d:-1}, busca:"" };
 
 /* ---------- formatacao ---------- */
 const nf0=new Intl.NumberFormat("pt-BR",{maximumFractionDigits:0});
@@ -375,7 +389,7 @@ function par(A,i){ const a= S.medida==="qtd"?A.qi[i] : S.medida==="csgm"?A.ci[i]
 let D=null;   // recorte corrente
 function calcular(){
   const aL=novoAgg(LOJA.length), aM=novoAgg(MES.length), aC=novoAgg(CAT.length),
-        aP=novoAgg(PROD.length), aF=novoAgg(FORN.length), T=novoAgg(1);
+        aG=novoAgg(GRUPO.length), aP=novoAgg(PROD.length), aF=novoAgg(FORN.length), T=novoAgg(1);
   const fl=S.loja.size, fg=S.grupo.size, fc=S.cat.size, ff=S.forn.size, un=S.un;
   for(let k=0;k<F.length;k++){
     const r=F[k], m=r[1];
@@ -386,9 +400,10 @@ function calcular(){
     if(fc&&!S.cat.has(P_CAT[p])) continue;
     if(fg&&!S.grupo.has(P_GRP[p])) continue;
     if(un!=="all" && (un==="KG") !== (P_KG[p]===1)) continue;
-    soma(aL,r[0],r); soma(aM,m,r); soma(aC,P_CAT[p],r); soma(aP,p,r); soma(aF,r[3],r); soma(T,0,r);
+    soma(aL,r[0],r); soma(aM,m,r); soma(aC,P_CAT[p],r); soma(aG,P_GRP[p],r);
+    soma(aP,p,r); soma(aF,r[3],r); soma(T,0,r);
   }
-  D={L:aL,M:aM,C:aC,P:aP,Fo:aF,T:T};
+  D={L:aL,M:aM,C:aC,G:aG,P:aP,Fo:aF,T:T};
 }
 
 /* ---------- tooltip ---------- */
@@ -420,7 +435,7 @@ function hbar(host,itens,opt){
   const W=Math.max(300,host.clientWidth), rowH=opt.rowH||30, barH=13, padB=26;
   const vs=itens.map(d=>d.v);
   const lo=Math.min(0,...vs), hi=Math.max(0,...vs), span=(hi-lo)||1;
-  const labW=Math.min(opt.labW||200,Math.max(96,W*0.34)), padR=Math.max(52,W*0.09);
+  const labW=Math.min(opt.labW||200,Math.max(96,W*(opt.labFrac||0.34))), padR=Math.max(52,W*0.09);
   const x0=labW+10+(lo<0?58:0);                       // faixa livre para rótulos negativos
   const plotW=Math.max(40,W-x0-padR), H=itens.length*rowH+padB;
   const X=v=>x0+plotW*(v-lo)/span, zero=X(0);
@@ -428,7 +443,7 @@ function hbar(host,itens,opt){
   const cInk=css("--ink"), cInk2=css("--ink-2"), cMut=css("--muted"), cGrid=css("--grid"),
         cAxis=css("--axis"), cIn=css("--in"), cOut=css("--out"), cSurf=css("--surface");
   // grade
-  const ticks=4;
+  const ticks=plotW<210?2:plotW<360?3:4;
   for(let i=0;i<=ticks;i++){ const v=lo+span*i/ticks, x=X(v);
     s.appendChild(sv("line",{x1:x,y1:0,x2:x,y2:H-padB+4,stroke:cGrid,"stroke-width":1}));
     s.appendChild(stext(x,H-padB+18,curto(v),{fill:cMut,"font-size":10.5,"text-anchor":"middle"})); }
@@ -608,17 +623,27 @@ function desenhar(){
   hbar($("ch-loja"),topL,{sign:S.visao==="liq",click:d=>d.click(),labW:210});
   legenda($("leg-loja"), S.visao==="liq"?[["Líquido positivo",cIn],["Líquido negativo",cOut]]:[]);
 
-  /* categorias */
+  /* hierarquia de mercadoria: 3º nó (HIERNODE3) ou 4º nó (HIERNODE4) */
+  const n3=S.nivel==="n3", AH=n3?D.G:D.C, DIM=n3?GRUPO:CAT, NIVEL=n3?"3º Nó":"4º Nó";
   const cats=[];
-  for(let i=0;i<CAT.length;i++){ if(!D.C.n[i]) continue;
-    const p=par(D.C,i);
-    cats.push({nm:CAT[i][1],cd:"",v:val(D.C,i),
-      tip:(ci,co)=>[["Setor",CAT[i][3],""],null,["Entradas (+)",fmt(p[0])+" "+unidade(),ci],
-        ["Saídas (−)",fmt(p[1])+" "+unidade(),co],["Líquido",fmt(p[0]-p[1])+" "+unidade(),""],
-        ["Lançamentos",nf0.format(D.C.n[i]),""]]}); }
+  for(let i=0;i<DIM.length;i++){ if(!AH.n[i]) continue;
+    const p=par(AH,i), lin=AH.n[i];
+    cats.push({nm:DIM[i][1],cd:DIM[i][0],v:val(AH,i),q:[AH.qi[i],AH.qo[i]],
+      m:S.medida==="csgm"?[AH.ci[i],AH.co[i]]:[AH.li[i],AH.lo[i]],n:lin,
+      tip:(ci,co)=>[["Denominação "+NIVEL,DIM[i][1],""],["Código",DIM[i][0],""]]
+        .concat(n3?[]:[["Denominação 3º Nó",CAT[i][3],""]])
+        .concat([null,["Entradas (+)",fmt(p[0])+" "+unidade(),ci],
+          ["Saídas (−)",fmt(p[1])+" "+unidade(),co],["Líquido",fmt(p[0]-p[1])+" "+unidade(),""],
+          ["Lançamentos",nf0.format(lin),""]])}); }
   cats.sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
-  $("cap-cat").textContent=rotulo()+" — "+(cats.length>10?"10 maiores de "+cats.length:cats.length===1?"1 categoria":cats.length+" categorias")+" · "+unidade();
-  hbar($("ch-cat"),cats.slice(0,10),{sign:S.visao==="liq",labW:150});
+  const topC=n3?cats:cats.slice(0,10);
+  $("cap-cat").textContent="Denominação "+NIVEL+" · "+rotulo().toLowerCase()+" — "+
+    (topC.length<cats.length?"10 maiores de "+cats.length+" nós":cats.length+(cats.length===1?" nó":" nós"))+" · "+unidade();
+  hbar($("ch-cat"),topC,{sign:S.visao==="liq",labW:200,labFrac:0.47});
+  tabela($("t-cat"),[{t:"Cód.",cls:"code"},{t:"Denominação "+NIVEL},{t:"Lanç."},
+    {t:"Qtd entrada",qtd:1},{t:"Qtd saída",qtd:1},{t:"Qtd líquida",qtd:1},
+    {t:"R$ entrada",money:1},{t:"R$ saída",money:1},{t:"R$ resultado",money:1}],
+    cats.map(d=>[d.cd,d.nm,d.n,d.q[0],d.q[1],d.q[0]-d.q[1],d.m[0],d.m[1],d.m[0]-d.m[1]]));
 
   /* tabela por loja */
   $("cap-tab").textContent="Entradas, saídas e resultado de cada loja no período filtrado. "+
@@ -658,7 +683,8 @@ function desenhar(){
   /* produtos e fornecedores */
   const prods=[];
   for(let i=0;i<PROD.length;i++){ if(!D.P.n[i]) continue;
-    prods.push({nm:PROD[i][1],sub:PROD[i][0]+" · "+PROD[i][2]+" · "+CAT[P_CAT[i]][1],v:val(D.P,i)}); }
+    prods.push({nm:PROD[i][1],sub:PROD[i][0]+" · "+PROD[i][2]+" · "+GRUPO[P_GRP[i]][1]+" › "+CAT[P_CAT[i]][1],
+      v:val(D.P,i)}); }
   prods.sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
   $("cap-prod").textContent=rotulo()+" — 15 maiores de "+nf0.format(prods.length)+" itens · "+unidade();
   rank($("r-prod"),prods.slice(0,15));
@@ -684,8 +710,8 @@ function chips(){
     add("Período", mesLongo(MES[S.m0])+" – "+mesLongo(MES[S.m1]), ()=>{S.m0=0;S.m1=MES.length-1;});
   const nomes=(set,arr,ix)=>[...set].slice(0,2).map(i=>arr[i][ix]).join(", ")+(set.size>2?" +"+(set.size-2):"");
   if(S.loja.size)  add("Lojas", nomes(S.loja,LOJA,1),  ()=>S.loja.clear());
-  if(S.grupo.size) add("Setor", nomes(S.grupo,GRUPO,1),()=>S.grupo.clear());
-  if(S.cat.size)   add("Categoria", nomes(S.cat,CAT,1),()=>S.cat.clear());
+  if(S.grupo.size) add("3º Nó", nomes(S.grupo,GRUPO,1),()=>S.grupo.clear());
+  if(S.cat.size)   add("4º Nó", nomes(S.cat,CAT,1),()=>S.cat.clear());
   if(S.forn.size)  add("Fornecedor", nomes(S.forn,FORN,1),()=>S.forn.clear());
   if(S.un!=="all") add("Unidade", S.un, ()=>S.un="all");
   if(S.busca)      add("Busca", S.busca, ()=>{S.busca="";$("q-loja").value="";});
@@ -755,6 +781,7 @@ function sincronizar(){
   $("un").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.u===S.un)));
   $("medida").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.m===S.medida)));
   $("visao").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===S.visao)));
+  $("nivel").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.n===S.nivel)));
   contadores.forEach(c=>c.atualizarContador());
 }
 
@@ -783,11 +810,11 @@ function iniciar(){
 
   /* filtros */
   contadores.push(multi("f-loja","Lojas",()=>LOJA.map((l,i)=>({v:i,nm:l[1],cd:l[0]+" · "+l[2]})),S.loja));
-  contadores.push(multi("f-grupo","Setores",()=>GRUPO.map((g,i)=>({v:i,nm:g[1],cd:g[0]})),S.grupo));
-  contadores.push(multi("f-cat","Categorias",()=>CAT.map((c,i)=>({v:i,nm:c[1],cd:c[0]}))
+  contadores.push(multi("f-grupo","Denominação 3º Nó",()=>GRUPO.map((g,i)=>({v:i,nm:g[1],cd:g[0]})),S.grupo));
+  contadores.push(multi("f-cat","Denominação 4º Nó",()=>CAT.map((c,i)=>({v:i,nm:c[1],cd:c[0]}))
     .filter(it=>!S.grupo.size||S.grupo.has(gIx[CAT[it.v][2]])),S.cat));
   contadores.push(multi("f-forn","Fornecedores",()=>FORN.map((f,i)=>({v:i,nm:f[1],cd:f[0]})),S.forn));
-  seg("un","un","u"); seg("medida","medida","m"); seg("visao","visao","v");
+  seg("un","un","u"); seg("medida","medida","m"); seg("visao","visao","v"); seg("nivel","nivel","n");
 
   $("q-loja").addEventListener("input",e=>{ S.busca=e.target.value; desenhar(); });
   $("reset").addEventListener("click",()=>{ S.m0=0; S.m1=MES.length-1;
