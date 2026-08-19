@@ -81,7 +81,8 @@ button, select, input{font:inherit; color:inherit}
 
 /* ---------- popover de selecao multipla ---------- */
 .pop{position:absolute; z-index:60; width:320px; max-width:calc(100vw - 24px); background:var(--surface);
-  border:1px solid var(--hair); border-radius:10px; box-shadow:var(--shadow); padding:8px; display:none}
+  border:1px solid var(--hair); border-radius:10px; box-shadow:var(--shadow); padding:8px; display:none;
+  max-height:calc(100vh - 20px); overflow:auto}
 .pop.open{display:block}
 .pop input[type="search"]{width:100%; height:32px; padding:0 10px; border-radius:6px; background:var(--surface-2);
   border:1px solid var(--hair); margin-bottom:6px}
@@ -92,6 +93,20 @@ button, select, input{font:inherit; color:inherit}
 .opt input{accent-color:var(--in); width:15px; height:15px; flex:none}
 .opt .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .opt .cd{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--muted); flex:none}
+.pop.pop-lg{width:360px}
+.pop h4{font-family:Archivo,sans-serif; font-size:13px; font-weight:600; margin:2px 4px 6px}
+.pop .hint{font-size:12px; color:var(--ink-2); margin:0 4px 10px; line-height:1.45}
+.pop .status{font-size:12px; color:var(--ink-2); margin:10px 4px 4px; line-height:1.45; min-height:1.2em}
+.drop{display:flex; flex-direction:column; align-items:center; gap:3px; padding:16px 12px; cursor:pointer;
+  border:1px dashed var(--axis); border-radius:9px; background:var(--surface-2); text-align:center}
+.drop:hover,.drop.on{border-color:var(--in); background:var(--in-soft)}
+.drop b{font-size:13px} .drop span{font-size:11.5px; color:var(--muted)}
+.opts{display:flex; flex-direction:column; gap:2px; max-height:320px; overflow:auto}
+.optbtn{display:flex; flex-direction:column; align-items:flex-start; gap:1px; width:100%; text-align:left;
+  padding:7px 9px; background:none; border:0; border-radius:7px; cursor:pointer}
+.optbtn:hover{background:var(--surface-2)}
+.optbtn b{font-size:13px; font-weight:500}
+.optbtn small{font-size:11px; color:var(--muted)}
 .chips{display:flex; flex-wrap:wrap; gap:6px; padding:0 0 12px}
 .chip{display:inline-flex; align-items:center; gap:7px; height:26px; padding:0 6px 0 10px; font-size:12px;
   background:var(--surface); border:1px solid var(--hair); border-radius:99px; color:var(--ink-2)}
@@ -240,6 +255,10 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
       </div>
     </div>
     <button type="button" class="linkbtn" id="reset">Limpar filtros</button>
+    <div class="grp"><span class="grp-label">Base</span>
+      <button type="button" class="ctl" id="b-base" aria-expanded="false">Atualizar dados <span class="car">▾</span></button>
+      <button type="button" class="ctl" id="b-exp" aria-expanded="false">Baixar planilha <span class="car">▾</span></button>
+    </div>
   </div>
 </div>
 
@@ -311,6 +330,12 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
       <li><b>Custo líquido</b> usa <code>VERPR_LIQUIDO_TOTAL</code> e <b>custo CSGM</b> usa
         <code>VERPR_CSGM_TOTAL</code> — são custos de estoque, não preço de venda.
         <code>VERPR_BRUTO_TOTAL</code> é idêntico ao líquido em 100% das linhas e por isso não aparece como medida separada.</li>
+      <li><b>Atualizar dados</b> lê um novo export do ZMMR270 direto no seu navegador e refaz o painel
+        inteiro — o arquivo não sai da sua máquina. A base carregada fica guardada neste navegador até
+        você trocar de novo ou clicar em "Restaurar a base publicada".</li>
+      <li><b>Baixar planilha</b> exporta exatamente o recorte que está filtrado. O botão só aparece onde
+        salvar arquivo é permitido: sempre na cópia local do painel (planilha .xlsx com uma aba por
+        recorte, ou .csv avulso) e, na versão publicada, quando o visualizador libera o download.</li>
       <li>A hierarquia de mercadoria vem em dois níveis: <b>Denominação 3º Nó</b>
         (<code>HIERNODE3</code>, 7 nós — PERECIVEIS, MERCEARIA ALIMENTO, BAZAR…) e
         <b>Denominação 4º Nó</b> (<code>HIERNODE4</code>, 28 nós dentro do 3º). Os filtros e o
@@ -331,19 +356,24 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
 <script>
 (function(){
 "use strict";
-const M = JSON.parse(document.getElementById("model").textContent);
-const F = M.fato;                     // [loja, mes, prod, forn, n, qi, qo, li, lo, ci, co]
-const LOJA=M.lojas, CAT=M.cats, FORN=M.forn, PROD=M.prod, MES=M.meses;
+const MODELO_ORIGINAL = JSON.parse(document.getElementById("model").textContent);
 const MESN=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+// F: [loja, mes, prod, forn, n, qi, qo, li, lo, ci, co]
+let M, F, LOJA, CAT, FORN, PROD, MES, GRUPO, gIx, P_CAT, P_GRP, P_KG;
 
-/* ---------- indices derivados ---------- */
-const GRUPO=[], gIx={};
-CAT.forEach(c=>{ if(!(c[2] in gIx)){ gIx[c[2]]=GRUPO.length; GRUPO.push([c[2],c[3]]); } });
-const P_CAT=new Int16Array(PROD.length), P_GRP=new Int16Array(PROD.length), P_KG=new Uint8Array(PROD.length);
-PROD.forEach((p,i)=>{ P_CAT[i]=p[3]; P_GRP[i]=gIx[CAT[p[3]][2]]; P_KG[i]= p[2]==="KG"?1:0; });
+function carregarModelo(modelo){
+  M=modelo; F=M.fato; LOJA=M.lojas; CAT=M.cats; FORN=M.forn; PROD=M.prod; MES=M.meses;
+  GRUPO=[]; gIx={};
+  CAT.forEach(c=>{ if(!(c[2] in gIx)){ gIx[c[2]]=GRUPO.length; GRUPO.push([c[2],c[3]]); } });
+  P_CAT=new Int16Array(PROD.length); P_GRP=new Int16Array(PROD.length); P_KG=new Uint8Array(PROD.length);
+  PROD.forEach((p,i)=>{ P_CAT[i]=p[3]; P_GRP[i]=gIx[CAT[p[3]][2]]; P_KG[i]= p[2]==="KG"?1:0; });
+  // os filtros guardam índices, que mudam junto com a base
+  S.m0=0; S.m1=MES.length-1; S.loja.clear(); S.grupo.clear(); S.cat.clear(); S.forn.clear();
+  S.busca=""; S.sort={k:"vn",d:-1};
+}
 
 /* ---------- estado ---------- */
-const S={ m0:0, m1:MES.length-1, loja:new Set(), grupo:new Set(), cat:new Set(), forn:new Set(),
+const S={ m0:0, m1:0, loja:new Set(), grupo:new Set(), cat:new Set(), forn:new Set(),
           un:"all", medida:"qtd", visao:"liq", nivel:"n3", sort:{k:"v",d:-1}, busca:"" };
 
 /* ---------- formatacao ---------- */
@@ -387,23 +417,28 @@ function par(A,i){ const a= S.medida==="qtd"?A.qi[i] : S.medida==="csgm"?A.ci[i]
   const b= S.medida==="qtd"?A.qo[i] : S.medida==="csgm"?A.co[i] : A.lo[i]; return [a,b]; }
 
 let D=null;   // recorte corrente
+function passa(r){
+  const m=r[1];
+  if(m<S.m0||m>S.m1) return false;
+  if(S.loja.size&&!S.loja.has(r[0])) return false;
+  if(S.forn.size&&!S.forn.has(r[3])) return false;
+  const p=r[2];
+  if(S.cat.size&&!S.cat.has(P_CAT[p])) return false;
+  if(S.grupo.size&&!S.grupo.has(P_GRP[p])) return false;
+  if(S.un!=="all" && (S.un==="KG") !== (P_KG[p]===1)) return false;
+  return true;
+}
 function calcular(){
   const aL=novoAgg(LOJA.length), aM=novoAgg(MES.length), aC=novoAgg(CAT.length),
         aG=novoAgg(GRUPO.length), aP=novoAgg(PROD.length), aF=novoAgg(FORN.length), T=novoAgg(1);
-  const fl=S.loja.size, fg=S.grupo.size, fc=S.cat.size, ff=S.forn.size, un=S.un;
+  let linhas=0;
   for(let k=0;k<F.length;k++){
-    const r=F[k], m=r[1];
-    if(m<S.m0||m>S.m1) continue;
-    if(fl&&!S.loja.has(r[0])) continue;
-    if(ff&&!S.forn.has(r[3])) continue;
+    const r=F[k]; if(!passa(r)) continue;
     const p=r[2];
-    if(fc&&!S.cat.has(P_CAT[p])) continue;
-    if(fg&&!S.grupo.has(P_GRP[p])) continue;
-    if(un!=="all" && (un==="KG") !== (P_KG[p]===1)) continue;
-    soma(aL,r[0],r); soma(aM,m,r); soma(aC,P_CAT[p],r); soma(aG,P_GRP[p],r);
-    soma(aP,p,r); soma(aF,r[3],r); soma(T,0,r);
+    soma(aL,r[0],r); soma(aM,r[1],r); soma(aC,P_CAT[p],r); soma(aG,P_GRP[p],r);
+    soma(aP,p,r); soma(aF,r[3],r); soma(T,0,r); linhas++;
   }
-  D={L:aL,M:aM,C:aC,G:aG,P:aP,Fo:aF,T:T};
+  D={L:aL,M:aM,C:aC,G:aG,P:aP,Fo:aF,T:T,fato:linhas};
 }
 
 /* ---------- tooltip ---------- */
@@ -770,6 +805,451 @@ function multi(btnId,titulo,itens,set){
   return {atualizarContador(){ btn.querySelector(".cnt").textContent=set.size?String(set.size):"todas"; }};
 }
 
+/* ================= leitura de um novo export do ZMMR270 =================
+   Mesma lógica do scripts/build_model.py, para o painel se atualizar sozinho. */
+function decodificar(buffer){
+  try{ return new TextDecoder("utf-8",{fatal:true}).decode(buffer); }
+  catch(e){ return new TextDecoder("windows-1252").decode(buffer); }   // export salvo em ANSI
+}
+function limpo(v){ return (v||"").replace(/[\x00-\x1f\x7f-\x9f]/g,"").replace(/\s+/g," ").trim(); }
+function numSap(v){ v=(v||"").trim(); if(!v) return 0;
+  const neg=v.endsWith("-"); const n=parseFloat(neg?v.slice(0,-1):v);
+  return isNaN(n)?0:(neg?-n:n); }
+
+function lerZMMR270(texto){
+  const linhas=texto.split(/\r?\n/);
+  let h=-1;
+  for(let i=0;i<Math.min(linhas.length,20);i++){ if(linhas[i].indexOf("CPUDT_MKPF")>=0){h=i;break;} }
+  if(h<0) throw new Error("não achei o cabeçalho do ZMMR270 (linha com CPUDT_MKPF)");
+  const cab=linhas[h].split(";").map(c=>limpo(c).toUpperCase());
+  const falta=["WERKS","MATNR","MENGE","VERPR_LIQUIDO_TOTAL","CPUDT_MKPF"].filter(c=>cab.indexOf(c)<0);
+  if(falta.length) throw new Error("faltam colunas no arquivo: "+falta.join(", "));
+  const ix={}; cab.forEach((c,i)=>{ if(!(c in ix)) ix[c]=i; });
+  const iMBLNR=cab.indexOf("MBLNR");
+
+  const lojas=new Map(), cats=new Map(), forn=new Map(), prod=new Map(), meses=new Set(), bruto=new Map();
+  let lidas=0, ignoradas=0;
+  for(let i=h+1;i<linhas.length;i++){
+    const ln=linhas[i]; if(!ln||ln.indexOf(";")<0) continue;
+    const c=ln.split(";");
+    // Export sem a coluna MBLNR: tudo depois dela anda uma casa para a esquerda.
+    const off=(iMBLNR>=0 && c.length===cab.length-1)?1:0;
+    const g=nome=>{ let j=ix[nome]; if(j===undefined) return "";
+      if(off && j>iMBLNR) j-=off; return c[j]; };
+    const data=limpo(g("CPUDT_MKPF"));
+    if(!/^\d{8}$/.test(data)){ ignoradas++; continue; }
+    const ym=data.slice(0,6);
+    const werks=limpo(g("WERKS")); if(!werks){ ignoradas++; continue; }
+    const matnr=limpo(g("MATNR")).replace(/^0+/,"");
+    let lifnr=limpo(g("LIFNR")).replace(/^0+/,""); if(!lifnr) lifnr="—";
+    const n4=limpo(g("HIERNODE4")), n3=limpo(g("HIERNODE3"));
+    if(!lojas.has(werks)) lojas.set(werks,[werks,limpo(g("WERKS_TEXT")),limpo(g("REGIO"))]);
+    if(!cats.has(n4))     cats.set(n4,[n4,limpo(g("HIERNODE4_TEXT")),n3,limpo(g("HIERNODE3_TEXT"))]);
+    if(!forn.has(lifnr))  forn.set(lifnr,[lifnr,limpo(g("LIFNR_TEXT"))||"(sem fornecedor)"]);
+    if(!prod.has(matnr))  prod.set(matnr,[matnr,limpo(g("MATNR_TEXT")),limpo(g("MEINS")),n4]);
+    meses.add(ym);
+    const q=numSap(g("MENGE")), vl=numSap(g("VERPR_LIQUIDO_TOTAL")), vc=numSap(g("VERPR_CSGM_TOTAL"));
+    const k=werks+""+ym+""+matnr+""+lifnr;
+    let a=bruto.get(k);
+    if(!a){ a=[werks,ym,matnr,lifnr,0,0,0,0,0,0,0]; bruto.set(k,a); }
+    a[4]++;
+    if(q>=0){ a[5]+=q; a[7]+=vl; a[9]+=vc; } else { a[6]-=q; a[8]-=vl; a[10]-=vc; }
+    lidas++;
+  }
+  if(!lidas) throw new Error("nenhuma linha de dados reconhecida no arquivo");
+
+  const ordMes=[...meses].sort(), mIx={}; ordMes.forEach((m,i)=>mIx[m]=i);
+  const ordena=(m,i)=>[...m.values()].sort((a,b)=>String(a[i]).localeCompare(String(b[i]),"pt-BR"));
+  const aLoja=ordena(lojas,1), aCat=ordena(cats,1), aForn=ordena(forn,1), aProd=ordena(prod,1);
+  const iL={},iC={},iF={},iP={};
+  aLoja.forEach((v,i)=>iL[v[0]]=i); aCat.forEach((v,i)=>iC[v[0]]=i);
+  aForn.forEach((v,i)=>iF[v[0]]=i); aProd.forEach((v,i)=>iP[v[0]]=i);
+  const r3=n=>Math.round(n*1000)/1000, r2=n=>Math.round(n*100)/100;
+  const fato=[...bruto.values()].map(a=>[iL[a[0]],mIx[a[1]],iP[a[2]],iF[a[3]],a[4],
+    r3(a[5]),r3(a[6]),r2(a[7]),r2(a[8]),r2(a[9]),r2(a[10])]);
+
+  return { meta:{fonte:"SAP ZMMR270 — Trocas e Avarias", linhas_origem:lidas, linhas_fato:fato.length,
+             periodo:[ordMes[0],ordMes[ordMes.length-1]], deposito:[], ignoradas:ignoradas},
+    meses:ordMes, lojas:aLoja, cats:aCat, forn:aForn,
+    prod:aProd.map(p=>[p[0],p[1],p[2],iC[p[3]]]), fato:fato };
+}
+
+/* ================= recortes para exportação ================= */
+function medidas(A,i){ const qi=A.qi[i],qo=A.qo[i],li=A.li[i],lo=A.lo[i],ci=A.ci[i],co=A.co[i];
+  const r3=n=>Math.round(n*1000)/1000, r2=n=>Math.round(n*100)/100;
+  return [A.n[i], r3(qi), r3(qo), r3(qi-qo), r2(li), r2(lo), r2(li-lo), r2(ci), r2(co), r2(ci-co)]; }
+const COLS_MED=["Lançamentos","Qtd entrada","Qtd saída","Qtd líquida",
+  "Custo líquido entrada","Custo líquido saída","Custo líquido resultado",
+  "Custo CSGM entrada","Custo CSGM saída","Custo CSGM resultado"];
+const TIPOS_MED=["n","q","q","q","m","m","m","m","m","m"];
+
+function recorte(id){
+  const T=(cols,tipos,rows)=>({cols:cols.concat(COLS_MED),tipos:tipos.concat(TIPOS_MED),rows:rows});
+  if(id==="loja"){ const r=[];
+    for(let i=0;i<LOJA.length;i++) if(D.L.n[i]) r.push([LOJA[i][0],LOJA[i][1],LOJA[i][2]].concat(medidas(D.L,i)));
+    return T(["Código","Loja","UF"],["t","t","t"],r); }
+  if(id==="mes"){ const r=[];
+    for(let i=S.m0;i<=S.m1;i++) if(D.M.n[i])
+      r.push([MES[i].slice(0,4)+"-"+MES[i].slice(4,6),mesLongo(MES[i])].concat(medidas(D.M,i)));
+    return T(["Mês","Mês (texto)"],["t","t"],r); }
+  if(id==="n3"){ const r=[];
+    for(let i=0;i<GRUPO.length;i++) if(D.G.n[i]) r.push([GRUPO[i][0],GRUPO[i][1]].concat(medidas(D.G,i)));
+    return T(["Código 3º Nó","Denominação 3º Nó"],["t","t"],r); }
+  if(id==="n4"){ const r=[];
+    for(let i=0;i<CAT.length;i++) if(D.C.n[i])
+      r.push([CAT[i][0],CAT[i][1],CAT[i][2],CAT[i][3]].concat(medidas(D.C,i)));
+    return T(["Código 4º Nó","Denominação 4º Nó","Código 3º Nó","Denominação 3º Nó"],["t","t","t","t"],r); }
+  if(id==="forn"){ const r=[];
+    for(let i=0;i<FORN.length;i++) if(D.Fo.n[i]) r.push([FORN[i][0],FORN[i][1]].concat(medidas(D.Fo,i)));
+    return T(["Código fornecedor","Fornecedor"],["t","t"],r); }
+  if(id==="prod"){ const r=[];
+    for(let i=0;i<PROD.length;i++) if(D.P.n[i]) r.push([PROD[i][0],PROD[i][1],PROD[i][2],
+      GRUPO[P_GRP[i]][1],CAT[P_CAT[i]][1]].concat(medidas(D.P,i)));
+    return T(["Código material","Descrição","UM","Denominação 3º Nó","Denominação 4º Nó"],
+      ["t","t","t","t","t"],r); }
+  if(id==="det"){ const r=[], r3=n=>Math.round(n*1000)/1000, r2=n=>Math.round(n*100)/100;
+    for(let k=0;k<F.length;k++){ const x=F[k]; if(!passa(x)) continue;
+      const p=x[2];
+      r.push([LOJA[x[0]][0],LOJA[x[0]][1],LOJA[x[0]][2],MES[x[1]].slice(0,4)+"-"+MES[x[1]].slice(4,6),
+        PROD[p][0],PROD[p][1],PROD[p][2],GRUPO[P_GRP[p]][1],CAT[P_CAT[p]][1],
+        FORN[x[3]][0],FORN[x[3]][1],
+        x[4],r3(x[5]),r3(x[6]),r3(x[5]-x[6]),r2(x[7]),r2(x[8]),r2(x[7]-x[8]),
+        r2(x[9]),r2(x[10]),r2(x[9]-x[10])]); }
+    return T(["Código loja","Loja","UF","Mês","Código material","Descrição","UM",
+      "Denominação 3º Nó","Denominação 4º Nó","Código fornecedor","Fornecedor"],
+      ["t","t","t","t","t","t","t","t","t","t","t"],r); }
+  if(id==="filtros"){ const at=[];
+    const lista=(set,arr,i)=>set.size?[...set].map(k=>arr[k][i]).join(", "):"(todas)";
+    at.push(["Período",mesLongo(MES[S.m0])+" a "+mesLongo(MES[S.m1])]);
+    at.push(["Lojas",lista(S.loja,LOJA,1)]);
+    at.push(["Denominação 3º Nó",lista(S.grupo,GRUPO,1)]);
+    at.push(["Denominação 4º Nó",lista(S.cat,CAT,1)]);
+    at.push(["Fornecedores",lista(S.forn,FORN,1)]);
+    at.push(["Unidade",S.un==="all"?"UN + KG":S.un]);
+    at.push(["Busca na tabela de lojas",S.busca||"(nenhuma)"]);
+    at.push(["",""]);
+    const m=medidas(D.T,0);
+    COLS_MED.forEach((c,i)=>at.push([c,m[i]]));
+    at.push(["",""]);
+    at.push(["Fonte",M.meta.fonte]);
+    at.push(["Linhas do export",M.meta.linhas_origem]);
+    at.push(["Gerado em",new Date().toLocaleString("pt-BR")]);
+    return {cols:["Item","Valor"],tipos:["t","x"],rows:at}; }
+  throw new Error("recorte desconhecido: "+id);
+}
+const RECORTES=[["filtros","Filtros e totais"],["loja","Por loja"],["mes","Por mês"],
+  ["n3","Por 3º Nó"],["n4","Por 4º Nó"],["forn","Por fornecedor"],["prod","Por produto"],
+  ["det","Base detalhada do filtro"]];
+
+/* ================= CSV ================= */
+function paraCSV(t){
+  const esc=v=>{ if(v===null||v===undefined) v="";
+    if(typeof v==="number") return String(v).replace(".",",");
+    v=String(v); return /[";\r\n]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; };
+  const linhas=[t.cols.map(esc).join(";")];
+  t.rows.forEach(r=>linhas.push(r.map(esc).join(";")));
+  return "\uFEFF"+linhas.join("\r\n")+"\r\n";
+}
+
+/* ================= XLSX mínimo (zip sem compressão) ================= */
+const TCRC=(function(){ const t=new Uint32Array(256);
+  for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; }
+  return t; })();
+function crc32(u8){ let c=0xFFFFFFFF;
+  for(let i=0;i<u8.length;i++) c=TCRC[(c^u8[i])&0xFF]^(c>>>8);
+  return (c^0xFFFFFFFF)>>>0; }
+async function comprimir(u8){
+  if(typeof CompressionStream==="undefined") return null;
+  try{
+    const fluxo=new Blob([u8]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+    return new Uint8Array(await new Response(fluxo).arrayBuffer());
+  }catch(e){ return null; }
+}
+async function zip(arquivos){
+  const enc=new TextEncoder(), partes=[], central=[]; let off=0;
+  for(const a of arquivos){
+    const nome=enc.encode(a.nome), dados=typeof a.dados==="string"?enc.encode(a.dados):a.dados;
+    const crc=crc32(dados);
+    const zip8=dados.length>512? await comprimir(dados) : null;
+    const usa=(zip8&&zip8.length<dados.length)?zip8:dados, metodo=(usa===zip8)?8:0;
+    const lh=new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true); lh.setUint16(6,0x0800,true);
+    lh.setUint16(8,metodo,true); lh.setUint16(10,0,true); lh.setUint16(12,0x21,true);
+    lh.setUint32(14,crc,true); lh.setUint32(18,usa.length,true); lh.setUint32(22,dados.length,true);
+    lh.setUint16(26,nome.length,true); lh.setUint16(28,0,true);
+    partes.push(new Uint8Array(lh.buffer),nome,usa);
+    const cd=new DataView(new ArrayBuffer(46));
+    cd.setUint32(0,0x02014b50,true); cd.setUint16(4,20,true); cd.setUint16(6,20,true);
+    cd.setUint16(8,0x0800,true); cd.setUint16(10,metodo,true); cd.setUint16(12,0,true); cd.setUint16(14,0x21,true);
+    cd.setUint32(16,crc,true); cd.setUint32(20,usa.length,true); cd.setUint32(24,dados.length,true);
+    cd.setUint16(28,nome.length,true); cd.setUint32(42,off,true);
+    central.push(new Uint8Array(cd.buffer),nome);
+    off+=30+nome.length+usa.length;
+  }
+  const tamCentral=central.reduce((s,p)=>s+p.length,0);
+  const fim=new DataView(new ArrayBuffer(22));
+  fim.setUint32(0,0x06054b50,true); fim.setUint16(8,arquivos.length,true);
+  fim.setUint16(10,arquivos.length,true); fim.setUint32(12,tamCentral,true); fim.setUint32(16,off,true);
+  const todas=partes.concat(central,[new Uint8Array(fim.buffer)]);
+  const total=todas.reduce((s,p)=>s+p.length,0), saida=new Uint8Array(total);
+  let q=0; todas.forEach(p=>{ saida.set(p,q); q+=p.length; });
+  return saida;
+}
+function xmlEsc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function colLetra(n){ let s=""; n++; while(n>0){ const r=(n-1)%26; s=String.fromCharCode(65+r)+s; n=(n-r-1)/26; } return s; }
+function folha(t){
+  const est={t:0,n:0,q:2,m:3,x:0}, linhas=[];
+  const cel=(c,l,v,tipo)=>{
+    const ref=colLetra(c)+(l+1);
+    if(typeof v==="number"&&isFinite(v)) return '<c r="'+ref+'" s="'+est[tipo]+'"><v>'+v+'</v></c>';
+    if(v===""||v===null||v===undefined) return "";
+    return '<c r="'+ref+'" t="inlineStr" s="'+(tipo==="h"?1:0)+'"><is><t xml:space="preserve">'+
+      xmlEsc(v)+'</t></is></c>';
+  };
+  linhas.push('<row r="1">'+t.cols.map((c,i)=>cel(i,0,c,"h")).join("")+'</row>');
+  t.rows.forEach((r,li)=>linhas.push('<row r="'+(li+2)+'">'+
+    r.map((v,i)=>cel(i,li+1,v,t.tipos[i]||"t")).join("")+'</row>'));
+  const larg=t.cols.map((c,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+
+    Math.min(46,Math.max(11,String(c).length+3))+'" customWidth="1"/>').join("");
+  const ref="A1:"+colLetra(t.cols.length-1)+(t.rows.length+1);
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+    '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" '+
+    'activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'+
+    '<cols>'+larg+'</cols><sheetData>'+linhas.join("")+'</sheetData>'+
+    '<autoFilter ref="'+ref+'"/></worksheet>';
+}
+async function paraXLSX(abas){
+  const a=[];
+  a.push({nome:"[Content_Types].xml",dados:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+    '<Default Extension="xml" ContentType="application/xml"/>'+
+    '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+
+    abas.map((x,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+
+      '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join("")+
+    '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+
+    '</Types>'});
+  a.push({nome:"_rels/.rels",dados:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'+
+    '</Relationships>'});
+  a.push({nome:"xl/workbook.xml",dados:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '+
+    'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+
+    abas.map((x,i)=>'<sheet name="'+xmlEsc(x.nome)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join("")+
+    '</sheets></workbook>'});
+  a.push({nome:"xl/_rels/workbook.xml.rels",dados:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    abas.map((x,i)=>'<Relationship Id="rId'+(i+1)+
+      '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+
+      (i+1)+'.xml"/>').join("")+
+    '<Relationship Id="rId'+(abas.length+1)+
+    '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'+
+    '</Relationships>'});
+  a.push({nome:"xl/styles.xml",dados:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+    '<numFmts count="2"><numFmt numFmtId="164" formatCode="#,##0.000"/>'+
+    '<numFmt numFmtId="165" formatCode="#,##0.00"/></numFmts>'+
+    '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font>'+
+    '<font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'+
+    '<fills count="2"><fill><patternFill patternType="none"/></fill>'+
+    '<fill><patternFill patternType="gray125"/></fill></fills>'+
+    '<borders count="1"><border/></borders>'+
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'+
+    '<cellXfs count="4"><xf xfId="0"/><xf xfId="0" fontId="1" applyFont="1"/>'+
+    '<xf xfId="0" numFmtId="164" applyNumberFormat="1"/>'+
+    '<xf xfId="0" numFmtId="165" applyNumberFormat="1"/></cellXfs>'+
+    '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'});
+  abas.forEach((x,i)=>a.push({nome:"xl/worksheets/sheet"+(i+1)+".xml",dados:folha(x.tab)}));
+  return await zip(a);
+}
+
+/* ================= entrega do arquivo ================= */
+let DL=null, MODO="blob";
+// Dentro de um visualizador (iframe) só dá para salvar arquivo pela capacidade "downloads";
+// no arquivo aberto direto no navegador vale o link comum. Sem nenhum dos dois, escondemos o botão.
+const EMBUTIDO=(function(){ try{ return window.top!==window.self; }catch(e){ return true; } })();
+async function prepararDownloads(){
+  try{ if(window.claude && typeof claude.use==="function") DL=await claude.use("downloads"); }
+  catch(e){ DL=null; }
+  MODO = DL ? "cap" : (EMBUTIDO ? "nenhum" : "blob");
+  const b=$("b-exp"); if(b) b.hidden=(MODO==="nenhum");
+}
+function baixarBlob(nome,dados,mime){
+  const a=document.createElement("a"), url=URL.createObjectURL(new Blob([dados],{type:mime}));
+  a.href=url; a.download=nome; a.addEventListener("click",e=>e.stopPropagation());
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },800);
+}
+async function entregar(nome,dados,mime,status,permitirTxt){
+  if(MODO==="cap"){
+    try{ await DL.save({filename:nome,data:dados}); status("Pronto: "+nome); return true; }
+    catch(e){
+      const c=e&&e.code;
+      if(c==="declined"){ status("Download cancelado."); return false; }
+      if((c==="rejected_extension"||c==="extension_not_enabled") && permitirTxt){
+        const ext=nome.split(".").pop(), alt=nome.replace(/\.[^.]+$/,".txt");
+        try{ await DL.save({filename:alt,data:dados});
+          status("Aqui o ."+ext+" não é liberado — salvei "+alt+
+            ". No Excel: Dados › De texto/CSV, separador ponto e vírgula."); return true; }
+        catch(e2){ status("Não deu para baixar neste ambiente ("+((e2&&e2.code)||"erro")+")."); return false; }
+      }
+      if(c==="too_large"){ status("Passou de 16 MB — filtre um período menor."); return false; }
+      status("Não deu para baixar ("+(c||"erro")+")."); return false;
+    }
+  }
+  baixarBlob(nome,dados,mime); status("Pronto: "+nome); return true;
+}
+function sufixo(){
+  const d=new Date(), p=n=>String(n).padStart(2,"0");
+  const filtrado=(S.loja.size||S.grupo.size||S.cat.size||S.forn.size||S.un!=="all"||
+    S.m0!==0||S.m1!==MES.length-1)?"-filtrado":"";
+  return filtrado+"-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate());
+}
+async function exportar(id,status){
+  status("Gerando…");
+  await new Promise(r=>setTimeout(r,20));
+  try{
+    if(id==="xlsx"){
+      const abas=RECORTES.map(r=>({nome:r[1].slice(0,31),tab:recorte(r[0])}));
+      return await entregar("trocas-avarias"+sufixo()+".xlsx",await paraXLSX(abas),
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",status,false);
+    }
+    const nome=(RECORTES.find(r=>r[0]===id)||["",id])[1];
+    const arq="trocas-"+nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+sufixo()+".csv";
+    return await entregar(arq,paraCSV(recorte(id)),"text/csv;charset=utf-8",status,true);
+  }catch(e){ status("Erro ao gerar: "+e.message); return false; }
+}
+
+/* ================= guarda da base no navegador ================= */
+function bd(){ return new Promise((res,rej)=>{
+  if(!window.indexedDB) return rej(new Error("sem indexedDB"));
+  const q=indexedDB.open("zmmr270",1);
+  q.onupgradeneeded=()=>{ if(!q.result.objectStoreNames.contains("base")) q.result.createObjectStore("base"); };
+  q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error||new Error("indexedDB")); }); }
+async function guardarBase(reg){ const db=await bd(); return new Promise((res,rej)=>{
+  const t=db.transaction("base","readwrite"); t.objectStore("base").put(reg,"atual");
+  t.oncomplete=()=>res(true); t.onerror=()=>rej(t.error); }); }
+async function lerBaseGuardada(){ const db=await bd(); return new Promise((res,rej)=>{
+  const t=db.transaction("base","readonly"), q=t.objectStore("base").get("atual");
+  q.onsuccess=()=>res(q.result||null); q.onerror=()=>rej(q.error); }); }
+async function apagarBaseGuardada(){ const db=await bd(); return new Promise((res,rej)=>{
+  const t=db.transaction("base","readwrite"); t.objectStore("base").delete("atual");
+  t.oncomplete=()=>res(true); t.onerror=()=>rej(t.error); }); }
+
+/* ================= troca de base ================= */
+let ORIGEM={tipo:"embutida",nome:"",quando:null};
+function textoOrigem(){
+  if(ORIGEM.tipo==="embutida") return "Base publicada com o painel.";
+  return "Base carregada de "+ORIGEM.nome+" em "+
+    new Date(ORIGEM.quando).toLocaleString("pt-BR")+
+    (ORIGEM.guardada?" (guardada neste navegador).":" (só nesta sessão).");
+}
+async function usarArquivo(file,status){
+  status("Lendo "+file.name+"…");
+  try{
+    const buf=await file.arrayBuffer();
+    status("Interpretando "+(buf.byteLength/1048576).toFixed(1)+" MB…");
+    await new Promise(r=>setTimeout(r,30));
+    const modelo=lerZMMR270(decodificar(buf));
+    ORIGEM={tipo:"arquivo",nome:file.name,quando:Date.now(),guardada:false};
+    try{ await guardarBase({modelo:modelo,nome:file.name,quando:ORIGEM.quando}); ORIGEM.guardada=true; }
+    catch(e){ /* sem armazenamento: segue só nesta sessão */ }
+    aplicarModelo(modelo);
+    status("Pronto: "+nf0.format(modelo.meta.linhas_origem)+" lançamentos, "+
+      modelo.lojas.length+" lojas, "+mesLongo(modelo.meses[0])+" a "+
+      mesLongo(modelo.meses[modelo.meses.length-1])+"."+
+      (modelo.meta.ignoradas?" "+nf0.format(modelo.meta.ignoradas)+" linhas ignoradas (sem data válida).":"")+
+      (ORIGEM.guardada?"":" Não consegui guardar no navegador — vale só nesta sessão."));
+  }catch(e){ status("Não consegui ler: "+e.message); }
+}
+async function restaurarBase(status){
+  try{ await apagarBaseGuardada(); }catch(e){}
+  ORIGEM={tipo:"embutida",nome:"",quando:null};
+  aplicarModelo(MODELO_ORIGINAL);
+  status("Base original restaurada.");
+}
+
+/* ================= painéis de base e download ================= */
+function popSimples(btnId,montar){
+  const btn=$(btnId); if(!btn) return;
+  const pop=el("div",{class:"pop pop-lg"});
+  pop.style.position="fixed"; document.body.appendChild(pop);
+  function abrir(){
+    document.querySelectorAll(".pop.open").forEach(p=>{ p.classList.remove("open");
+      const b=p.__btn; if(b) b.setAttribute("aria-expanded","false"); });
+    pop.textContent=""; montar(pop); pop.classList.add("open"); pop.__btn=btn;
+    btn.setAttribute("aria-expanded","true");
+    const r=btn.getBoundingClientRect();
+    pop.style.left=Math.max(8,Math.min(r.left,innerWidth-pop.offsetWidth-8))+"px";
+    pop.style.top=Math.min(r.bottom+6,Math.max(8,innerHeight-pop.offsetHeight-8))+"px";
+  }
+  function fechar(){ pop.classList.remove("open"); btn.setAttribute("aria-expanded","false"); }
+  btn.addEventListener("click",e=>{ e.stopPropagation();
+    pop.classList.contains("open")?fechar():abrir(); });
+  pop.addEventListener("click",e=>e.stopPropagation());
+  document.addEventListener("click",fechar);
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Escape"&&pop.classList.contains("open")){ fechar(); btn.focus(); } });
+}
+
+function montarBase(pop){
+  pop.appendChild(el("h4",{text:"Atualizar a base"}));
+  pop.appendChild(el("p",{class:"hint",text:"Exporte o ZMMR270 como texto separado por ponto e vírgula e "+
+    "solte o arquivo aqui. O painel reconhece o layout com ou sem a coluna MBLNR, em UTF-8 ou ANSI, e "+
+    "refaz todos os cálculos no seu navegador — nada é enviado para fora."}));
+  const zona=el("label",{class:"drop"});
+  const inp=el("input",{type:"file",accept:".txt,.csv,.tsv,text/plain"});
+  inp.style.display="none";
+  zona.appendChild(el("b",{text:"Escolher arquivo"}));
+  zona.appendChild(el("span",{text:"ou arraste o .txt para cá"}));
+  zona.appendChild(inp);
+  const st=el("p",{class:"status",text:textoOrigem()});
+  const status=t=>{ st.textContent=t; };
+  inp.addEventListener("change",()=>{ if(inp.files&&inp.files[0]) usarArquivo(inp.files[0],status); });
+  ["dragenter","dragover"].forEach(ev=>zona.addEventListener(ev,e=>{
+    e.preventDefault(); zona.classList.add("on"); }));
+  ["dragleave","drop"].forEach(ev=>zona.addEventListener(ev,e=>{
+    e.preventDefault(); zona.classList.remove("on"); }));
+  zona.addEventListener("drop",e=>{ const f=e.dataTransfer&&e.dataTransfer.files[0];
+    if(f) usarArquivo(f,status); });
+  pop.appendChild(zona); pop.appendChild(st);
+  const rest=el("button",{class:"linkbtn",type:"button",text:"Restaurar a base publicada"});
+  rest.addEventListener("click",()=>restaurarBase(status));
+  pop.appendChild(rest);
+}
+
+function contagem(id){
+  const conta=(A,n)=>{ let c=0; for(let i=0;i<n;i++) if(A.n[i]) c++; return c; };
+  if(id==="loja") return conta(D.L,LOJA.length)+" lojas";
+  if(id==="mes")  return conta(D.M,MES.length)+" meses";
+  if(id==="n3")   return conta(D.G,GRUPO.length)+" nós";
+  if(id==="n4")   return conta(D.C,CAT.length)+" nós";
+  if(id==="forn") return conta(D.Fo,FORN.length)+" fornecedores";
+  if(id==="prod") return conta(D.P,PROD.length)+" produtos";
+  if(id==="det")  return nf0.format(D.fato)+" linhas do grão loja × mês × produto";
+  return "filtros aplicados e totais do recorte";
+}
+function montarExport(pop){
+  pop.appendChild(el("h4",{text:"Baixar o que está filtrado"}));
+  pop.appendChild(el("p",{class:"hint",text: MODO==="cap"
+    ? "Cada arquivo sai em .csv com ponto e vírgula, já no padrão do Excel em português. O visualizador pede sua confirmação antes de salvar."
+    : "A planilha completa traz uma aba por recorte. Os .csv usam ponto e vírgula e abrem direto no Excel em português."}));
+  const st=el("p",{class:"status"});
+  const status=t=>{ st.textContent=t; };
+  const lista=el("div",{class:"opts"});
+  const opt=(titulo,sub,fn)=>{ const b=el("button",{class:"optbtn",type:"button"});
+    b.appendChild(el("b",{text:titulo})); b.appendChild(el("small",{text:sub}));
+    b.addEventListener("click",fn); lista.appendChild(b); };
+  if(MODO!=="cap")
+    opt("Planilha completa (.xlsx)","uma aba por recorte, com filtros, totais e a base detalhada",
+        ()=>exportar("xlsx",status));
+  RECORTES.forEach(r=>opt(r[1]+" (.csv)",contagem(r[0]),()=>exportar(r[0],status)));
+  pop.appendChild(lista); pop.appendChild(st);
+}
+
 /* ---------- controles ---------- */
 const contadores=[];
 function seg(id,campo,attr,depois){
@@ -785,20 +1265,28 @@ function sincronizar(){
   contadores.forEach(c=>c.atualizarContador());
 }
 
-function iniciar(){
-  /* cabecalho */
-  const meta=$("meta");
+function renderMeta(){
+  const meta=$("meta"); meta.textContent="";
   [["Lançamentos",nf0.format(M.meta.linhas_origem)],["Lojas",nf0.format(LOJA.length)],
    ["Produtos",nf0.format(PROD.length)],["Fornecedores",nf0.format(FORN.length)],
    ["Período",mesLongo(MES[0])+" – "+mesLongo(MES[MES.length-1])]].forEach(x=>{
-    const d=el("div"); d.appendChild(el("b",{text:x[1]})); d.appendChild(document.createTextNode(x[0])); meta.appendChild(d); });
+    const d=el("div"); d.appendChild(el("b",{text:x[1]}));
+    d.appendChild(document.createTextNode(x[0])); meta.appendChild(d); });
   $("fonte").textContent="Fonte: "+M.meta.fonte+" · "+nf0.format(M.meta.linhas_origem)+
     " linhas do export agregadas em "+nf0.format(M.meta.linhas_fato)+
-    " registros no grão loja × mês × produto × fornecedor. Depósito: "+M.meta.deposito.join(", ")+".";
+    " registros no grão loja × mês × produto × fornecedor. "+textoOrigem();
+}
+function popularMeses(){
+  ["m0","m1"].forEach(id=>{ const sel=$(id); sel.textContent="";
+    MES.forEach((m,i)=>sel.appendChild(el("option",{value:String(i),text:mesLongo(m)}))); });
+}
+function aplicarModelo(modelo){
+  carregarModelo(modelo); renderMeta(); popularMeses();
+  const q=$("q-loja"); if(q) q.value="";
+  atualizar();
+}
 
-  /* periodo */
-  MES.forEach((m,i)=>{ $("m0").appendChild(el("option",{value:String(i),text:mesLongo(m)}));
-                       $("m1").appendChild(el("option",{value:String(i),text:mesLongo(m)})); });
+function iniciar(){
   $("m0").addEventListener("change",()=>{ S.m0=+$("m0").value; if(S.m0>S.m1)S.m1=S.m0; atualizar(); });
   $("m1").addEventListener("change",()=>{ S.m1=+$("m1").value; if(S.m1<S.m0)S.m0=S.m1; atualizar(); });
   $("presets").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
@@ -827,7 +1315,17 @@ function iniciar(){
   (mq.addEventListener?mq.addEventListener.bind(mq,"change"):mq.addListener.bind(mq))(()=>desenhar());
   new MutationObserver(()=>desenhar()).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
-  atualizar();
+  popSimples("b-base",montarBase);
+  popSimples("b-exp",montarExport);
+  aplicarModelo(MODELO_ORIGINAL);
+
+  (async function(){
+    await prepararDownloads();
+    try{ const reg=await lerBaseGuardada();
+      if(reg&&reg.modelo){ ORIGEM={tipo:"arquivo",nome:reg.nome,quando:reg.quando,guardada:true};
+        aplicarModelo(reg.modelo); }
+    }catch(e){ /* sem armazenamento: fica a base publicada */ }
+  })();
 }
 iniciar();
 })();
