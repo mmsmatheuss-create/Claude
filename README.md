@@ -3,14 +3,22 @@
 Transforma o export bruto do relatório **ZMMR270** (depósito 0002 — Trocas/Avarias) em um
 modelo analítico navegável: quantidade e valor por **loja**, período, categoria, fornecedor e produto.
 
-O resultado é um painel HTML único, sem dependências externas (`dist/painel-trocas-avarias.html`),
-que abre em qualquer navegador — os dados vão embutidos no próprio arquivo.
+O resultado é um painel HTML único, sem dependências externas, com os dados embutidos no próprio
+arquivo. São duas saídas do mesmo template:
+
+| Arquivo | Para quê |
+|---|---|
+| `dist/painel-trocas-avarias-offline.html` | documento HTML completo, para abrir direto do disco |
+| `dist/painel-trocas-avarias.html` | só o conteúdo da página, que o publicador de Artifact envolve no `<head>` dele |
 
 ## Como regerar
 
 ```bash
 python3 scripts/build_model.py <export-ZMMR270.txt> data/model.json
-python3 scripts/build_dashboard.py data/model.json dashboard/template.html dist/painel-trocas-avarias.html
+python3 scripts/build_dashboard.py data/model.json dashboard/template.html \
+  dist/painel-trocas-avarias-offline.html --standalone     # abre direto do disco
+python3 scripts/build_dashboard.py data/model.json dashboard/template.html \
+  dist/painel-trocas-avarias.html                          # para publicar como Artifact
 ```
 
 Requisitos: Python 3 com `pandas`.
@@ -65,7 +73,10 @@ ANSI, e localiza as colunas pelo cabeçalho.
 
 ```bash
 python3 scripts/build_model.py <novo-export.txt> data/model.json
-python3 scripts/build_dashboard.py data/model.json dashboard/template.html dist/painel-trocas-avarias.html
+python3 scripts/build_dashboard.py data/model.json dashboard/template.html \
+  dist/painel-trocas-avarias-offline.html --standalone     # abre direto do disco
+python3 scripts/build_dashboard.py data/model.json dashboard/template.html \
+  dist/painel-trocas-avarias.html                          # para publicar como Artifact
 ```
 
 ## Exportar o recorte filtrado
@@ -80,7 +91,7 @@ custos, cada um em entrada, saída e resultado), independente da medida escolhid
 - **.csv** — um recorte por arquivo, separador `;`, decimal com vírgula e BOM, abre direto no Excel
   em português.
 
-O botão aparece quando salvar arquivo é possível: sempre no `dist/painel-trocas-avarias.html` aberto
+O botão aparece quando salvar arquivo é possível: sempre no `dist/painel-trocas-avarias-offline.html` aberto
 direto no navegador; na versão publicada como Artifact, só com a capacidade `downloads`, que exige o
 artefato **não** estar compartilhado publicamente.
 
