@@ -37,10 +37,10 @@ material) não vem preenchida. As demais colunas seguem a ordem do cabeçalho.
 | `prod` | 799 | `MATNR`, `MATNR_TEXT`, `MEINS`, categoria |
 | `fato` | loja × mês × produto × fornecedor | 106.018 linhas agregadas em 28.249 registros |
 
-Cada registro do fato guarda entradas e saídas separadas (`qi`/`qo` em quantidade,
-`li`/`lo` em custo líquido, `ci`/`co` em custo CSGM), o que permite calcular no cliente
-resultado (entradas − saídas), movimentação (entradas + saídas) ou cada lado isolado,
-sem voltar à base.
+Cada registro do fato guarda entradas e saídas separadas — `qi`/`qo` em quantidade e `li`/`lo`
+em reais — o que permite calcular no cliente resultado (entradas − saídas), movimentação
+(entradas + saídas) ou cada lado isolado, sem voltar à base. O valor em reais é sempre
+`VERPR_LIQUIDO_TOTAL`; `VERPR_CSGM_TOTAL` não entra no modelo.
 
 ## Cálculos
 
@@ -53,8 +53,8 @@ Se a conta mudar no código, esse documento muda junto.
 
 - **Sinal SAP invertido**: `132.60-` vira `-132.60`.
 - **Período** vem de `CPUDT_MKPF` (data de lançamento). `MJAHR` pode divergir e não é usado.
-- **`VERPR_BRUTO_TOTAL` é idêntico a `VERPR_LIQUIDO_TOTAL`** em 100% das linhas, então só o
-  líquido e o CSGM entram como medidas.
+- **O valor em reais é só o custo líquido** (`VERPR_LIQUIDO_TOTAL`). `VERPR_BRUTO_TOTAL` é idêntico
+  a ele em 100% das linhas e `VERPR_CSGM_TOTAL` ficou fora do modelo — nenhum cálculo usa CSGM.
 - **Nada é deduplicado**: sem `MBLNR` não há como separar linhas idênticas de documentos
   diferentes, e 5.923 linhas repetidas são mantidas (somam nos totais, como no relatório).
 - **Quantidade mistura UN e KG** (96.221 e 9.797 linhas); o painel tem filtro de unidade
@@ -98,8 +98,8 @@ inteiro. Com uma única loja no recorte o ranking de lojas sai da tela — uma b
 
 Botão **Baixar planilha**. Sai exatamente o que está filtrado, em oito recortes: filtros e totais,
 por loja, por mês, por 3º nó, por 4º nó, por fornecedor, por produto e a base detalhada no grão
-loja × mês × produto × fornecedor. Toda tabela traz as dez medidas (lançamentos, quantidade e os dois
-custos, cada um em entrada, saída e resultado), independente da medida escolhida na tela.
+loja × mês × produto × fornecedor. Toda tabela traz as sete medidas (lançamentos, quantidade e reais, cada um
+em entrada, saída e resultado), independente da medida escolhida na tela.
 
 - **.xlsx** — pasta completa, uma aba por recorte, com cabeçalho congelado, autofiltro e formato
   numérico. Gerada em JS (zip com deflate via `CompressionStream`), sem biblioteca externa.
@@ -112,11 +112,11 @@ artefato **não** estar compartilhado publicamente.
 
 ## Conferência
 
-Os totais do painel batem com a base bruta: quantidade líquida 46.072,2 · custo líquido
-R$ 334.642,32 · custo CSGM R$ 361.897,63 · 106.018 lançamentos.
+Os totais do painel batem com a base bruta: quantidade líquida 46.072,2 · R$ 334.642,32 ·
+106.018 lançamentos.
 
 O leitor em JS foi conferido contra o pipeline em Python: recarregando o mesmo export pelo botão
 **Atualizar dados**, os seis indicadores e as dimensões ficam idênticos. Um recorte filtrado
 (loja 1046, set/2024 a ago/2026) exportado pelo painel bate com o `pandas` em todas as colunas:
-641 lançamentos, 2.809 / 1.633 / 1.176 de quantidade, R$ 83.655,02 / 54.199,03 / 29.455,99 de custo
-líquido e 306 linhas no grão detalhado.
+641 lançamentos, 2.809 / 1.633 / 1.176 de quantidade, R$ 83.655,02 / 54.199,03 / 29.455,99 e
+306 linhas no grão detalhado.

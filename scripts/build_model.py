@@ -42,7 +42,7 @@ def load(path: str) -> pd.DataFrame:
                      keep_default_na=False, encoding="utf-8")
     for c in COLS:
         df[c] = clean(df[c])
-    for c in ["MENGE", "VERPR_LIQUIDO_TOTAL", "VERPR_CSGM_TOTAL"]:
+    for c in ["MENGE", "VERPR_LIQUIDO_TOTAL"]:
         df[c] = sap_num(df[c])
 
     df["YM"] = df.CPUDT_MKPF.str[:6]
@@ -81,24 +81,21 @@ def build(df: pd.DataFrame) -> dict:
     # ---------- fato agregado ----------
     # Entradas (movimento positivo) e saidas (negativo) sao somadas em separado
     # para permitir ver liquido, entradas, saidas ou movimentacao total.
+    # O valor em reais e sempre VERPR_LIQUIDO_TOTAL; VERPR_CSGM_TOTAL nao entra no modelo.
     d = df.assign(
-        pos=df.MENGE > 0,
         qi=np.where(df.MENGE > 0, df.MENGE, 0.0),
         qo=np.where(df.MENGE < 0, -df.MENGE, 0.0),
         li=np.where(df.MENGE > 0, df.VERPR_LIQUIDO_TOTAL, 0.0),
         lo=np.where(df.MENGE < 0, -df.VERPR_LIQUIDO_TOTAL, 0.0),
-        ci=np.where(df.MENGE > 0, df.VERPR_CSGM_TOTAL, 0.0),
-        co=np.where(df.MENGE < 0, -df.VERPR_CSGM_TOTAL, 0.0),
     )
     fato = (d.groupby(["WERKS", "YM", "MATNR", "LIFNR"], sort=False)
              .agg(n=("qi", "size"), qi=("qi", "sum"), qo=("qo", "sum"),
-                  li=("li", "sum"), lo=("lo", "sum"), ci=("ci", "sum"), co=("co", "sum"))
+                  li=("li", "sum"), lo=("lo", "sum"))
              .reset_index())
 
     rows = [[int(lojas_ix[r.WERKS]), int(mes_ix[r.YM]), int(prod_ix[r.MATNR]),
              int(forn_ix[r.LIFNR]), int(r.n),
-             round(r.qi, 3), round(r.qo, 3),
-             round(r.li, 2), round(r.lo, 2), round(r.ci, 2), round(r.co, 2)]
+             round(r.qi, 3), round(r.qo, 3), round(r.li, 2), round(r.lo, 2)]
             for r in fato.itertuples()]
 
     return {

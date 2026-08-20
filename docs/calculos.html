@@ -99,7 +99,7 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
     <ol class="passos">
       <li><i class="num">1</i><div><b>Linha do relatório</b><br>
         <span>O sinal SAP à direita vira número negativo e as chaves são normalizadas.</span></div></li>
-      <li><i class="num">2</i><div><b>Sete acumuladores</b><br>
+      <li><i class="num">2</i><div><b>Cinco acumuladores</b><br>
         <span>Cada linha soma em <em>um</em> dos dois lados — entrada ou saída — conforme o sinal da quantidade,
         no grão loja × mês × produto × fornecedor.</span></div></li>
       <li><i class="num">3</i><div><b>Filtro</b><br>
@@ -128,8 +128,10 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
           <td><code>AAAAMM</code> = 6 primeiros dígitos da data</td></tr>
         <tr><td class="f">MENGE</td><td>Quantidade</td>
           <td>sinal à direita vira negativo: <code>15.000-</code> → <code>−15</code></td></tr>
-        <tr><td class="f">VERPR_LIQUIDO_TOTAL</td><td>Custo líquido</td><td>mesmo tratamento de sinal</td></tr>
-        <tr><td class="f">VERPR_CSGM_TOTAL</td><td>Custo CSGM</td><td>mesmo tratamento de sinal</td></tr>
+        <tr><td class="f">VERPR_LIQUIDO_TOTAL</td><td>Valor em reais</td>
+          <td>mesmo tratamento de sinal — é o único custo que o painel usa</td></tr>
+        <tr><td class="f">VERPR_CSGM_TOTAL</td><td>—</td>
+          <td>fora do modelo: nenhum cálculo do painel usa CSGM</td></tr>
         <tr><td class="f">MJAHR · ZEILE</td><td>—</td>
           <td>não usados: o período vem da data de lançamento, não do ano do documento</td></tr>
         <tr><td class="f">VERPR_BRUTO_TOTAL</td><td>—</td>
@@ -143,15 +145,14 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
 
   <section>
     <div class="eyebrow">Passo 2 · o coração da conta</div>
-    <h2>Os sete acumuladores</h2>
+    <h2>Os cinco acumuladores</h2>
     <p>Cada linha do relatório soma em <b>um só lado</b>. Quem decide o lado é o sinal da quantidade —
       e o valor acompanha, sem exceção nas 106.018 linhas do seu arquivo.</p>
 <pre>n  += 1                                   <i>// sempre, é a contagem de lançamentos</i>
 
 <b>se MENGE ≥ 0</b>  <i>(entrada)</i>                 <b>se MENGE &lt; 0</b>  <i>(saída)</i>
   qi += MENGE                              qo += −MENGE
-  li += VERPR_LIQUIDO_TOTAL                lo += −VERPR_LIQUIDO_TOTAL
-  ci += VERPR_CSGM_TOTAL                   co += −VERPR_CSGM_TOTAL</pre>
+  li += VERPR_LIQUIDO_TOTAL                lo += −VERPR_LIQUIDO_TOTAL</pre>
     <p class="nota">Os acumuladores de saída guardam o número <b>positivo</b> — o menos é aplicado na hora
       de somar. É por isso que “Qtd saída” aparece como 20.572 e não como −20.572.</p>
     <div class="tw"><table>
@@ -162,14 +163,10 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
           <td class="f w">Σ MENGE, nas linhas com MENGE ≥ 0</td></tr>
         <tr><td class="f">qo</td><td><span class="tag s">Qtd saída</span></td>
           <td class="f w">Σ |MENGE|, nas linhas com MENGE &lt; 0</td></tr>
-        <tr><td class="f">li</td><td><span class="tag e">R$ entrada</span> (custo líquido)</td>
+        <tr><td class="f">li</td><td><span class="tag e">R$ entrada</span></td>
           <td class="f w">Σ VERPR_LIQUIDO_TOTAL, nas linhas com MENGE ≥ 0</td></tr>
-        <tr><td class="f">lo</td><td><span class="tag s">R$ saída</span> (custo líquido)</td>
+        <tr><td class="f">lo</td><td><span class="tag s">R$ saída</span></td>
           <td class="f w">Σ |VERPR_LIQUIDO_TOTAL|, nas linhas com MENGE &lt; 0</td></tr>
-        <tr><td class="f">ci</td><td><span class="tag e">R$ entrada</span> (CSGM)</td>
-          <td class="f w">Σ VERPR_CSGM_TOTAL, nas linhas com MENGE ≥ 0</td></tr>
-        <tr><td class="f">co</td><td><span class="tag s">R$ saída</span> (CSGM)</td>
-          <td class="f w">Σ |VERPR_CSGM_TOTAL|, nas linhas com MENGE &lt; 0</td></tr>
       </tbody>
     </table></div>
     <p class="nota">Grão da soma: <b>loja × mês × produto × fornecedor</b>. As 106.018 linhas viram 28.249
@@ -221,8 +218,7 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
       <thead><tr><th>Medida</th><th>a — entradas</th><th>b — saídas</th></tr></thead>
       <tbody>
         <tr><td>Quantidade</td><td class="f">qi</td><td class="f">qo</td></tr>
-        <tr><td>Custo líquido</td><td class="f">li</td><td class="f">lo</td></tr>
-        <tr><td>Custo CSGM</td><td class="f">ci</td><td class="f">co</td></tr>
+        <tr><td>Valor (R$)</td><td class="f">li</td><td class="f">lo</td></tr>
       </tbody>
     </table></div>
     <p>A <b>visão</b> decide a conta final:</p>
@@ -250,7 +246,7 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
       <tbody>
         <tr><td>Quantidade líquida (un)</td><td class="f w">Σqi − Σqo, somando todo o recorte</td></tr>
         <tr><td>↳ Entradas / Saídas</td><td class="f w">Σqi / Σqo</td></tr>
-        <tr><td>Resultado (R$)</td><td class="f w">Σli − Σlo &nbsp;<i>(Σci − Σco com a medida CSGM)</i></td></tr>
+        <tr><td>Resultado (R$)</td><td class="f w">Σli − Σlo</td></tr>
         <tr><td>Movimentado (R$)</td><td class="f w">Σli + Σlo</td></tr>
         <tr><td>Lojas</td><td class="f w">lojas com Σn &gt; 0 &nbsp;<i>· “124 na base” = total do modelo</i></td></tr>
         <tr><td>Produtos</td><td class="f w">produtos com Σn &gt; 0 &nbsp;<i>· abaixo, fornecedores com Σn &gt; 0</i></td></tr>
@@ -279,7 +275,7 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
         <tr><td>Lanç.</td><td class="f w">Σn da loja</td></tr>
         <tr><td>Qtd entrada / saída</td><td class="f w">Σqi / Σqo</td></tr>
         <tr><td>Qtd líquida</td><td class="f w">Σqi − Σqo</td></tr>
-        <tr><td>R$ entrada / saída</td><td class="f w">Σli / Σlo &nbsp;<i>(ci/co com CSGM)</i></td></tr>
+        <tr><td>R$ entrada / saída</td><td class="f w">Σli / Σlo</td></tr>
         <tr><td>R$ resultado</td><td class="f w">Σli − Σlo</td></tr>
         <tr><td>Linha de total</td><td class="f w">soma das linhas visíveis, já com a busca aplicada</td></tr>
       </tbody>
@@ -324,11 +320,10 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
     </table></div>
 
     <h3>Planilha exportada</h3>
-    <p>Toda aba traz as <b>dez medidas</b>, nas duas bases de custo, independentes da medida e da visão
-      que estiverem na tela: <code>Lançamentos</code>, <code>Qtd entrada</code>, <code>Qtd saída</code>,
-      <code>Qtd líquida</code>, <code>Custo líquido entrada/saída/resultado</code> e
-      <code>Custo CSGM entrada/saída/resultado</code>. A aba <b>Base detalhada</b> é uma linha por registro
-      do grão loja × mês × produto × fornecedor — o nível mais fino que o modelo guarda.</p>
+    <p>Toda aba traz as <b>sete medidas</b>, independentes da medida e da visão que estiverem na tela:
+      <code>Lançamentos</code>, <code>Qtd entrada</code>, <code>Qtd saída</code>, <code>Qtd líquida</code>,
+      <code>R$ entrada</code>, <code>R$ saída</code> e <code>R$ resultado</code>. A aba <b>Base detalhada</b>
+      é uma linha por registro do grão loja × mês × produto × fornecedor — o nível mais fino que o modelo guarda.</p>
   </section>
 
   <section>
@@ -342,11 +337,11 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
         linhas idênticas de documentos diferentes. As 5.923 repetições são mantidas e somam, igual ao relatório.</li>
       <li><b>Sinal coerente.</b> Em 106.018 linhas, o sinal do valor sempre acompanha o da quantidade —
         nenhuma linha cai num lado com o valor puxando para o outro.</li>
-      <li><b>Custo, não venda.</b> <code>VERPR_LIQUIDO_TOTAL</code> e <code>VERPR_CSGM_TOTAL</code> são custos de
-        estoque. Os dois divergem em 61% das linhas, por isso as duas medidas existem em separado.</li>
-      <li><b>Conferência.</b> Sobre o arquivo inteiro: 46.072,2 un de resultado, R$ 334.642,32 de custo líquido,
-        R$ 361.897,63 de CSGM e 106.018 lançamentos — os mesmos números pelo pipeline em Python e pelo leitor
-        do navegador.</li>
+      <li><b>Custo, não venda.</b> O valor em reais é sempre <code>VERPR_LIQUIDO_TOTAL</code>, um custo de
+        estoque. <code>VERPR_CSGM_TOTAL</code> existe no relatório e diverge do líquido em 61% das linhas,
+        mas ficou de fora: nenhum número do painel usa CSGM.</li>
+      <li><b>Conferência.</b> Sobre o arquivo inteiro: 46.072,2 un de resultado, R$ 334.642,32 de valor
+        e 106.018 lançamentos — os mesmos números pelo pipeline em Python e pelo leitor do navegador.</li>
     </ul>
   </section>
 

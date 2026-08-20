@@ -256,8 +256,7 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
     <div class="grp"><span class="grp-label">Medida</span>
       <div class="seg" id="medida" role="group" aria-label="Medida">
         <button type="button" data-m="qtd">Quantidade</button>
-        <button type="button" data-m="liq">Custo líquido</button>
-        <button type="button" data-m="csgm">Custo CSGM</button>
+        <button type="button" data-m="liq">Valor (R$)</button>
       </div>
     </div>
     <div class="grp"><span class="grp-label">Visão</span>
@@ -374,9 +373,9 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
       <li><b>Entradas (+)</b> são os lançamentos com quantidade positiva no depósito de trocas e
         <b>saídas (−)</b> os de quantidade negativa. <b>Líquido</b> = entradas − saídas;
         <b>movimentação</b> = entradas + saídas (volume total tratado, independente do sinal).</li>
-      <li><b>Custo líquido</b> usa <code>VERPR_LIQUIDO_TOTAL</code> e <b>custo CSGM</b> usa
-        <code>VERPR_CSGM_TOTAL</code> — são custos de estoque, não preço de venda.
-        <code>VERPR_BRUTO_TOTAL</code> é idêntico ao líquido em 100% das linhas e por isso não aparece como medida separada.</li>
+      <li>O <b>valor em reais</b> é sempre o <b>custo líquido</b> (<code>VERPR_LIQUIDO_TOTAL</code>) —
+        custo de estoque, não preço de venda. <code>VERPR_BRUTO_TOTAL</code> é idêntico a ele em 100% das
+        linhas e <code>VERPR_CSGM_TOTAL</code> ficou fora do modelo: nenhum cálculo do painel usa CSGM.</li>
       <li><b>Atualizar dados</b> lê um novo export do ZMMR270 direto no seu navegador e refaz o painel
         inteiro — o arquivo não sai da sua máquina. A base carregada fica guardada neste navegador até
         você carregar outro export ou limpar pelo mesmo painel.</li>
@@ -455,14 +454,12 @@ function css(n){ return getComputedStyle(document.body).getPropertyValue(n).trim
 
 /* ---------- agregacao ---------- */
 function novoAgg(n){ return {qi:new Float64Array(n),qo:new Float64Array(n),li:new Float64Array(n),
-  lo:new Float64Array(n),ci:new Float64Array(n),co:new Float64Array(n),n:new Float64Array(n)}; }
-function soma(A,i,r){ A.qi[i]+=r[5]; A.qo[i]+=r[6]; A.li[i]+=r[7]; A.lo[i]+=r[8];
-  A.ci[i]+=r[9]; A.co[i]+=r[10]; A.n[i]+=r[4]; }
-function val(A,i){ const a= S.medida==="qtd"?A.qi[i] : S.medida==="csgm"?A.ci[i] : A.li[i];
-  const b= S.medida==="qtd"?A.qo[i] : S.medida==="csgm"?A.co[i] : A.lo[i];
+  lo:new Float64Array(n),n:new Float64Array(n)}; }
+function soma(A,i,r){ A.qi[i]+=r[5]; A.qo[i]+=r[6]; A.li[i]+=r[7]; A.lo[i]+=r[8]; A.n[i]+=r[4]; }
+// a = lado das entradas, b = lado das saídas, na medida escolhida
+function par(A,i){ return S.medida==="qtd" ? [A.qi[i],A.qo[i]] : [A.li[i],A.lo[i]]; }
+function val(A,i){ const [a,b]=par(A,i);
   return S.visao==="in"?a : S.visao==="out"?b : S.visao==="tot"?a+b : a-b; }
-function par(A,i){ const a= S.medida==="qtd"?A.qi[i] : S.medida==="csgm"?A.ci[i] : A.li[i];
-  const b= S.medida==="qtd"?A.qo[i] : S.medida==="csgm"?A.co[i] : A.lo[i]; return [a,b]; }
 
 let D=null;   // recorte corrente
 function passa(r){
@@ -657,7 +654,7 @@ function tabela(host,cols,linhas,tot,est){
 }
 
 /* ---------- rotulos ---------- */
-const NM_MED={qtd:"Quantidade",liq:"Custo líquido",csgm:"Custo CSGM"};
+const NM_MED={qtd:"Quantidade",liq:"Valor (R$)"};
 const NM_VIS={liq:"resultado (entradas − saídas)",in:"entradas (+)",out:"saídas (−)",tot:"movimentação (entradas + saídas)"};
 function rotulo(){ return NM_MED[S.medida]+" · "+NM_VIS[S.visao]; }
 function legenda(host,pares){ host.textContent="";
@@ -669,9 +666,7 @@ const $=id=>document.getElementById(id);
 function desenhar(){
   if(!D) return;
   const T=D.T, cIn=css("--in"), cOut=css("--out");
-  const vq=[T.qi[0],T.qo[0]];
-  const vv= S.medida==="csgm" ? [T.ci[0],T.co[0]] : [T.li[0],T.lo[0]];
-  const nomeVal = S.medida==="csgm" ? "Custo CSGM" : "Custo líquido";
+  const vq=[T.qi[0],T.qo[0]], vv=[T.li[0],T.lo[0]];
   let nLoja=0,nProd=0,nForn=0;
   for(let i=0;i<LOJA.length;i++) if(D.L.n[i]) nLoja++;
   for(let i=0;i<PROD.length;i++) if(D.P.n[i]) nProd++;
@@ -684,7 +679,7 @@ function desenhar(){
     {k:"Resultado (R$)",v:fmtM(vv[0]-vv[1]),
      d:[["i","Entradas "+curto(vv[0])],["o","Saídas "+curto(vv[1])]]},
     {k:"Movimentado (R$)",v:fmtM(vv[0]+vv[1]),
-     d:[["","entradas + saídas · "+nomeVal.toLowerCase()]]},
+     d:[["","entradas + saídas, sem compensar sinal"]]},
     {k:"Lojas",v:nf0.format(nLoja),d:[["",nf0.format(LOJA.length)+" na base"]]},
     {k:"Produtos",v:nf0.format(nProd),d:[["",nf0.format(nForn)+" fornecedores"]]},
     {k:"Lançamentos",v:nf0.format(T.n[0]),d:[["","linhas do ZMMR270"]]}];
@@ -702,7 +697,7 @@ function desenhar(){
   const lojas=[];
   for(let i=0;i<LOJA.length;i++){ if(!D.L.n[i]) continue;
     lojas.push({ix:i,nm:LOJA[i][1],cd:LOJA[i][0],uf:LOJA[i][2],v:val(D.L,i),p:par(D.L,i),n:D.L.n[i],
-                q:[D.L.qi[i],D.L.qo[i]], m:S.medida==="csgm"?[D.L.ci[i],D.L.co[i]]:[D.L.li[i],D.L.lo[i]]}); }
+                q:[D.L.qi[i],D.L.qo[i]], m:[D.L.li[i],D.L.lo[i]]}); }
   const topL=lojas.slice().sort((a,b)=>Math.abs(b.v)-Math.abs(a.v)).slice(0,15).map(d=>({
     nm:d.nm, cd:d.cd, v:d.v,
     tip:(ci,co)=>[["Entradas (+)",fmt(d.p[0])+" "+unidade(),ci],["Saídas (−)",fmt(d.p[1])+" "+unidade(),co],null,
@@ -724,7 +719,7 @@ function desenhar(){
   for(let i=0;i<DIM.length;i++){ if(!AH.n[i]) continue;
     const p=par(AH,i), lin=AH.n[i];
     cats.push({nm:DIM[i][1],cd:DIM[i][0],v:val(AH,i),q:[AH.qi[i],AH.qo[i]],
-      m:S.medida==="csgm"?[AH.ci[i],AH.co[i]]:[AH.li[i],AH.lo[i]],n:lin,
+      m:[AH.li[i],AH.lo[i]],n:lin,
       tip:(ci,co)=>[["Denominação "+NIVEL,DIM[i][1],""],["Código",DIM[i][0],""]]
         .concat(n3?[]:[["Denominação 3º Nó",CAT[i][3],""]])
         .concat([null,["Entradas (+)",fmt(p[0])+" "+unidade(),ci],
@@ -742,7 +737,7 @@ function desenhar(){
 
   /* tabela por loja */
   $("cap-tab").textContent="Entradas, saídas e resultado de cada loja no período filtrado. "+
-    "Valores em "+nomeVal.toLowerCase()+" (R$). Clique nos títulos das colunas para ordenar.";
+    "Valores em custo líquido (R$). Clique nos títulos das colunas para ordenar.";
   const q=S.busca.trim().toLowerCase();
   const filtradas=lojas.filter(d=>!q||d.nm.toLowerCase().includes(q)||d.cd.includes(q));
   const chave={cd:d=>d.cd,nm:d=>d.nm,uf:d=>d.uf,n:d=>d.n,qi:d=>d.q[0],qo:d=>d.q[1],qn:d=>d.q[0]-d.q[1],
@@ -770,8 +765,7 @@ function desenhar(){
       forn: fi>=0?FORN[fi][1] : "vários fornecedores",
       ult: D.pUlt[i]>=0?mesLongo(MES[D.pUlt[i]]):"",
       ultIx: D.pUlt[i], n:D.P.n[i],
-      q:[D.P.qi[i],D.P.qo[i]],
-      m:S.medida==="csgm"?[D.P.ci[i],D.P.co[i]]:[D.P.li[i],D.P.lo[i]]}); }
+      q:[D.P.qi[i],D.P.qo[i]], m:[D.P.li[i],D.P.lo[i]]}); }
   const qi=S.buscaItem.trim().toLowerCase();
   const itensF=itens.filter(d=>!qi||d.nm.toLowerCase().includes(qi)||d.cd.includes(qi)||
     d.n4.toLowerCase().includes(qi)||d.n3.toLowerCase().includes(qi)||d.forn.toLowerCase().includes(qi));
@@ -806,7 +800,7 @@ function desenhar(){
   const meses=[];
   for(let i=S.m0;i<=S.m1;i++){ const p=par(D.M,i);
     meses.push({ym:MES[i],i:p[0],o:p[1],n:D.M.n[i],q:[D.M.qi[i],D.M.qo[i]],
-      m:S.medida==="csgm"?[D.M.ci[i],D.M.co[i]]:[D.M.li[i],D.M.lo[i]]}); }
+      m:[D.M.li[i],D.M.lo[i]]}); }
   $("cap-mes").textContent=rotulo()+" por mês de lançamento · "+unidade()+
     (S.visao==="liq"?" — barras acima do eixo são resultado positivo, abaixo negativo":"");
   colunas($("ch-mes"),meses);
@@ -950,12 +944,12 @@ function lerZMMR270(texto){
     if(!forn.has(lifnr))  forn.set(lifnr,[lifnr,limpo(g("LIFNR_TEXT"))||"(sem fornecedor)"]);
     if(!prod.has(matnr))  prod.set(matnr,[matnr,limpo(g("MATNR_TEXT")),limpo(g("MEINS")),n4]);
     meses.add(ym);
-    const q=numSap(g("MENGE")), vl=numSap(g("VERPR_LIQUIDO_TOTAL")), vc=numSap(g("VERPR_CSGM_TOTAL"));
+    const q=numSap(g("MENGE")), vl=numSap(g("VERPR_LIQUIDO_TOTAL"));
     const k=werks+""+ym+""+matnr+""+lifnr;
     let a=bruto.get(k);
-    if(!a){ a=[werks,ym,matnr,lifnr,0,0,0,0,0,0,0]; bruto.set(k,a); }
+    if(!a){ a=[werks,ym,matnr,lifnr,0,0,0,0,0]; bruto.set(k,a); }
     a[4]++;
-    if(q>=0){ a[5]+=q; a[7]+=vl; a[9]+=vc; } else { a[6]-=q; a[8]-=vl; a[10]-=vc; }
+    if(q>=0){ a[5]+=q; a[7]+=vl; } else { a[6]-=q; a[8]-=vl; }
     lidas++;
   }
   if(!lidas) throw new Error("nenhuma linha de dados reconhecida no arquivo");
@@ -968,7 +962,7 @@ function lerZMMR270(texto){
   aForn.forEach((v,i)=>iF[v[0]]=i); aProd.forEach((v,i)=>iP[v[0]]=i);
   const r3=n=>Math.round(n*1000)/1000, r2=n=>Math.round(n*100)/100;
   const fato=[...bruto.values()].map(a=>[iL[a[0]],mIx[a[1]],iP[a[2]],iF[a[3]],a[4],
-    r3(a[5]),r3(a[6]),r2(a[7]),r2(a[8]),r2(a[9]),r2(a[10])]);
+    r3(a[5]),r3(a[6]),r2(a[7]),r2(a[8])]);
 
   return { meta:{fonte:"SAP ZMMR270 — Trocas e Avarias", linhas_origem:lidas, linhas_fato:fato.length,
              periodo:[ordMes[0],ordMes[ordMes.length-1]], deposito:[], ignoradas:ignoradas},
@@ -977,13 +971,12 @@ function lerZMMR270(texto){
 }
 
 /* ================= recortes para exportação ================= */
-function medidas(A,i){ const qi=A.qi[i],qo=A.qo[i],li=A.li[i],lo=A.lo[i],ci=A.ci[i],co=A.co[i];
+function medidas(A,i){ const qi=A.qi[i],qo=A.qo[i],li=A.li[i],lo=A.lo[i];
   const r3=n=>Math.round(n*1000)/1000, r2=n=>Math.round(n*100)/100;
-  return [A.n[i], r3(qi), r3(qo), r3(qi-qo), r2(li), r2(lo), r2(li-lo), r2(ci), r2(co), r2(ci-co)]; }
+  return [A.n[i], r3(qi), r3(qo), r3(qi-qo), r2(li), r2(lo), r2(li-lo)]; }
 const COLS_MED=["Lançamentos","Qtd entrada","Qtd saída","Qtd líquida",
-  "Custo líquido entrada","Custo líquido saída","Custo líquido resultado",
-  "Custo CSGM entrada","Custo CSGM saída","Custo CSGM resultado"];
-const TIPOS_MED=["n","q","q","q","m","m","m","m","m","m"];
+  "R$ entrada","R$ saída","R$ resultado"];
+const TIPOS_MED=["n","q","q","q","m","m","m"];
 
 function recorte(id){
   const T=(cols,tipos,rows)=>({cols:cols.concat(COLS_MED),tipos:tipos.concat(TIPOS_MED),rows:rows});
@@ -1019,8 +1012,7 @@ function recorte(id){
       r.push([LOJA[x[0]][0],LOJA[x[0]][1],LOJA[x[0]][2],MES[x[1]].slice(0,4)+"-"+MES[x[1]].slice(4,6),
         PROD[p][0],PROD[p][1],PROD[p][2],GRUPO[P_GRP[p]][1],CAT[P_CAT[p]][1],
         FORN[x[3]][0],FORN[x[3]][1],
-        x[4],r3(x[5]),r3(x[6]),r3(x[5]-x[6]),r2(x[7]),r2(x[8]),r2(x[7]-x[8]),
-        r2(x[9]),r2(x[10]),r2(x[9]-x[10])]); }
+        x[4],r3(x[5]),r3(x[6]),r3(x[5]-x[6]),r2(x[7]),r2(x[8]),r2(x[7]-x[8])]); }
     return T(["Código loja","Loja","UF","Mês","Código material","Descrição","UM",
       "Denominação 3º Nó","Denominação 4º Nó","Código fornecedor","Fornecedor"],
       ["t","t","t","t","t","t","t","t","t","t","t"],r); }
