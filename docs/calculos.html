@@ -1,0 +1,355 @@
+<meta charset="utf-8">
+<title>Cálculos de Trocas e Avarias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --plane:#eef1f5; --surface:#fbfcfd; --surface-2:#f4f6f9;
+  --ink:#0f1418; --ink-2:#5a6470; --muted:#8a939e;
+  --hair:rgba(15,20,24,.10); --hair-2:rgba(15,20,24,.06); --axis:#cad1da;
+  --in:#2a78d6; --out:#e34948; --in-soft:rgba(42,120,214,.10); --out-soft:rgba(227,73,72,.10);
+  --focus:#2a78d6;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --plane:#0e1113; --surface:#171a1d; --surface-2:#1e2226;
+    --ink:#f3f6f9; --ink-2:#b3bcc6; --muted:#8a939e;
+    --hair:rgba(255,255,255,.12); --hair-2:rgba(255,255,255,.07); --axis:#333a41;
+    --in:#3987e5; --out:#e66767; --in-soft:rgba(57,135,229,.16); --out-soft:rgba(230,103,103,.16);
+    --focus:#7fb0f0;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --plane:#0e1113; --surface:#171a1d; --surface-2:#1e2226;
+  --ink:#f3f6f9; --ink-2:#b3bcc6; --muted:#8a939e;
+  --hair:rgba(255,255,255,.12); --hair-2:rgba(255,255,255,.07); --axis:#333a41;
+  --in:#3987e5; --out:#e66767; --in-soft:rgba(57,135,229,.16); --out-soft:rgba(230,103,103,.16);
+  --focus:#7fb0f0;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--plane); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; font-size:14.5px;
+  line-height:1.6; -webkit-font-smoothing:antialiased}
+.wrap{max-width:960px; margin:0 auto; padding:36px 20px 80px}
+h1,h2,h3{font-family:Archivo,system-ui,sans-serif; margin:0; text-wrap:balance; letter-spacing:-.01em}
+h1{font-size:clamp(26px,3.6vw,36px); font-weight:700; margin-top:8px}
+h2{font-size:20px; font-weight:600; margin:0 0 4px}
+h3{font-size:15px; font-weight:600; margin:26px 0 8px}
+.eyebrow{font-family:Archivo,sans-serif; font-size:11px; font-weight:600; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted)}
+.lead{color:var(--ink-2); margin:10px 0 0; max-width:64ch; font-size:15.5px}
+section{background:var(--surface); border:1px solid var(--hair); border-radius:12px;
+  padding:22px 24px 24px; margin:20px 0}
+section > .eyebrow{margin-bottom:6px}
+p{margin:10px 0 0; max-width:70ch}
+p.nota{color:var(--ink-2); font-size:13.5px}
+code,kbd{font-family:"IBM Plex Mono",monospace; font-size:12.5px; background:var(--surface-2);
+  border:1px solid var(--hair-2); border-radius:4px; padding:1px 5px}
+pre{font-family:"IBM Plex Mono",monospace; font-size:12.5px; line-height:1.7; background:var(--surface-2);
+  border:1px solid var(--hair-2); border-left:3px solid var(--in); border-radius:8px;
+  padding:14px 16px; overflow-x:auto; margin:14px 0 0}
+pre b{color:var(--in); font-weight:500}
+pre i{color:var(--muted); font-style:normal}
+.tw{overflow-x:auto; margin-top:14px}
+table{border-collapse:collapse; width:100%; font-size:13.5px}
+th,td{text-align:left; padding:8px 12px 8px 0; border-bottom:1px solid var(--hair-2); vertical-align:top}
+th{font-family:Archivo,sans-serif; font-size:10.5px; font-weight:600; letter-spacing:.07em;
+  text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--hair); white-space:nowrap}
+td:first-child{white-space:nowrap; padding-right:22px}
+td.f{font-family:"IBM Plex Mono",monospace; font-size:12.5px; white-space:nowrap}
+td.f.w{white-space:normal}
+tbody tr:last-child td{border-bottom:0}
+.passos{list-style:none; margin:16px 0 0; padding:0; display:grid; gap:2px}
+.passos li{display:grid; grid-template-columns:26px 1fr; gap:12px; padding:9px 0;
+  border-bottom:1px solid var(--hair-2); align-items:baseline}
+.passos li:last-child{border-bottom:0}
+.passos .num{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--in);
+  border:1px solid var(--in); border-radius:50%; width:22px; height:22px; display:grid;
+  place-items:center; align-self:start; margin-top:1px}
+.passos b{font-weight:600}
+.passos span{color:var(--ink-2); font-size:13.5px}
+.ex{background:var(--surface-2); border:1px solid var(--hair-2); border-radius:10px;
+  padding:16px 18px; margin-top:16px}
+.ex h4{font-family:Archivo,sans-serif; font-size:12px; font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--muted); margin:0 0 10px}
+.ex table{font-size:13px} .ex td:first-child{padding-right:18px}
+.tag{display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:11px; padding:1px 7px;
+  border-radius:99px; border:1px solid var(--hair); color:var(--ink-2); background:var(--surface)}
+.tag.e{color:var(--in); border-color:var(--in); background:var(--in-soft)}
+.tag.s{color:var(--out); border-color:var(--out); background:var(--out-soft)}
+ul.lim{margin:14px 0 0; padding-left:20px; display:grid; gap:9px; color:var(--ink-2); font-size:13.5px}
+ul.lim b{color:var(--ink); font-weight:600}
+footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); color:var(--muted);
+  font-size:12.5px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">SAP ZMMR270 · depósito 0002 — Trocas e Avarias</div>
+  <h1>Cálculos de Trocas e Avarias</h1>
+  <p class="lead">Cada número do painel e a conta exata que o produz. Escrito a partir do código que
+    roda — <code>scripts/build_model.py</code> e o leitor em JS do painel fazem a mesma coisa, linha por linha.</p>
+
+  <section>
+    <h2>O caminho de um número</h2>
+    <ol class="passos">
+      <li><i class="num">1</i><div><b>Linha do relatório</b><br>
+        <span>O sinal SAP à direita vira número negativo e as chaves são normalizadas.</span></div></li>
+      <li><i class="num">2</i><div><b>Sete acumuladores</b><br>
+        <span>Cada linha soma em <em>um</em> dos dois lados — entrada ou saída — conforme o sinal da quantidade,
+        no grão loja × mês × produto × fornecedor.</span></div></li>
+      <li><i class="num">3</i><div><b>Filtro</b><br>
+        <span>Período, loja, hierarquia, fornecedor e unidade decidem quais registros entram na soma.</span></div></li>
+      <li><i class="num">4</i><div><b>Medida × visão</b><br>
+        <span>A medida escolhe o par de acumuladores; a visão decide se é diferença, soma ou um lado só.</span></div></li>
+      <li><i class="num">5</i><div><b>Campo na tela</b><br>
+        <span>Indicador, barra, célula de tabela ou coluna do arquivo exportado.</span></div></li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="eyebrow">Passo 1</div>
+    <h2>Da linha do relatório para o modelo</h2>
+    <div class="tw"><table>
+      <thead><tr><th>Coluna do ZMMR270</th><th>Vira</th><th>Regra aplicada</th></tr></thead>
+      <tbody>
+        <tr><td class="f">WERKS · WERKS_TEXT · REGIO</td><td>Loja</td><td>usados como estão</td></tr>
+        <tr><td class="f">HIERNODE3 · HIERNODE4<br>+ _TEXT</td><td>Hierarquia de mercadoria</td>
+          <td>4º nó pendurado no 3º; o produto carrega o 4º nó do cadastro</td></tr>
+        <tr><td class="f">LIFNR · LIFNR_TEXT</td><td>Fornecedor</td>
+          <td>zeros à esquerda removidos; vazio vira <code>—</code> “(sem fornecedor)”</td></tr>
+        <tr><td class="f">MATNR · MATNR_TEXT · MEINS</td><td>Produto</td>
+          <td>zeros à esquerda removidos</td></tr>
+        <tr><td class="f">CPUDT_MKPF</td><td>Mês do lançamento</td>
+          <td><code>AAAAMM</code> = 6 primeiros dígitos da data</td></tr>
+        <tr><td class="f">MENGE</td><td>Quantidade</td>
+          <td>sinal à direita vira negativo: <code>15.000-</code> → <code>−15</code></td></tr>
+        <tr><td class="f">VERPR_LIQUIDO_TOTAL</td><td>Custo líquido</td><td>mesmo tratamento de sinal</td></tr>
+        <tr><td class="f">VERPR_CSGM_TOTAL</td><td>Custo CSGM</td><td>mesmo tratamento de sinal</td></tr>
+        <tr><td class="f">MJAHR · ZEILE</td><td>—</td>
+          <td>não usados: o período vem da data de lançamento, não do ano do documento</td></tr>
+        <tr><td class="f">VERPR_BRUTO_TOTAL</td><td>—</td>
+          <td>idêntico ao líquido em 100% das 106.018 linhas, então não vira medida separada</td></tr>
+        <tr><td class="f">MBLNR</td><td>—</td><td>não vem preenchido no export</td></tr>
+      </tbody>
+    </table></div>
+    <p class="nota">A linha é descartada se a data não for <code>AAAAMMDD</code> ou se a loja vier vazia —
+      o painel informa quantas ignorou. No seu arquivo: nenhuma.</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Passo 2 · o coração da conta</div>
+    <h2>Os sete acumuladores</h2>
+    <p>Cada linha do relatório soma em <b>um só lado</b>. Quem decide o lado é o sinal da quantidade —
+      e o valor acompanha, sem exceção nas 106.018 linhas do seu arquivo.</p>
+<pre>n  += 1                                   <i>// sempre, é a contagem de lançamentos</i>
+
+<b>se MENGE ≥ 0</b>  <i>(entrada)</i>                 <b>se MENGE &lt; 0</b>  <i>(saída)</i>
+  qi += MENGE                              qo += −MENGE
+  li += VERPR_LIQUIDO_TOTAL                lo += −VERPR_LIQUIDO_TOTAL
+  ci += VERPR_CSGM_TOTAL                   co += −VERPR_CSGM_TOTAL</pre>
+    <p class="nota">Os acumuladores de saída guardam o número <b>positivo</b> — o menos é aplicado na hora
+      de somar. É por isso que “Qtd saída” aparece como 20.572 e não como −20.572.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Acumulador</th><th>Nome na tela</th><th>Conta</th></tr></thead>
+      <tbody>
+        <tr><td class="f">n</td><td>Lançamentos</td><td class="f w">contagem de linhas do relatório</td></tr>
+        <tr><td class="f">qi</td><td><span class="tag e">Qtd entrada</span></td>
+          <td class="f w">Σ MENGE, nas linhas com MENGE ≥ 0</td></tr>
+        <tr><td class="f">qo</td><td><span class="tag s">Qtd saída</span></td>
+          <td class="f w">Σ |MENGE|, nas linhas com MENGE &lt; 0</td></tr>
+        <tr><td class="f">li</td><td><span class="tag e">R$ entrada</span> (custo líquido)</td>
+          <td class="f w">Σ VERPR_LIQUIDO_TOTAL, nas linhas com MENGE ≥ 0</td></tr>
+        <tr><td class="f">lo</td><td><span class="tag s">R$ saída</span> (custo líquido)</td>
+          <td class="f w">Σ |VERPR_LIQUIDO_TOTAL|, nas linhas com MENGE &lt; 0</td></tr>
+        <tr><td class="f">ci</td><td><span class="tag e">R$ entrada</span> (CSGM)</td>
+          <td class="f w">Σ VERPR_CSGM_TOTAL, nas linhas com MENGE ≥ 0</td></tr>
+        <tr><td class="f">co</td><td><span class="tag s">R$ saída</span> (CSGM)</td>
+          <td class="f w">Σ |VERPR_CSGM_TOTAL|, nas linhas com MENGE &lt; 0</td></tr>
+      </tbody>
+    </table></div>
+    <p class="nota">Grão da soma: <b>loja × mês × produto × fornecedor</b>. As 106.018 linhas viram 28.249
+      registros. Quantidades ficam com 3 casas e valores com 2.</p>
+
+    <div class="ex">
+      <h4>Exemplo conferido · loja 1046 MELLO PEIXOTO, material 1000016988</h4>
+      <div class="tw"><table>
+        <tbody>
+          <tr><td>Linhas do relatório</td><td class="f">59</td><td>→ <code>n = 59</code></td></tr>
+          <tr><td>Com quantidade positiva</td><td class="f">53 linhas, 656 un</td>
+            <td>→ <code>qi = 656</code> · <code>li = 18.158,08</code></td></tr>
+          <tr><td>Com quantidade negativa</td><td class="f">6 linhas, −103 un</td>
+            <td>→ <code>qo = 103</code> · <code>lo = 2.851,04</code></td></tr>
+          <tr><td>Resultado</td><td class="f">656 − 103 = 553 un</td>
+            <td class="f">18.158,08 − 2.851,04 = 15.307,04</td></tr>
+          <tr><td>Movimentação</td><td class="f">656 + 103 = 759 un</td>
+            <td class="f">18.158,08 + 2.851,04 = 21.009,12</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Passo 3</div>
+    <h2>O filtro</h2>
+    <p>Um registro entra na soma se passar em <b>todos</b> os filtros. Filtro sem seleção não restringe nada.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Filtro</th><th>Regra</th><th>O que compara</th></tr></thead>
+      <tbody>
+        <tr><td>Período</td><td class="f">mês inicial ≤ mês ≤ mês final</td><td>mês do lançamento, inclusive nas pontas</td></tr>
+        <tr><td>Lojas</td><td class="f">loja ∈ selecionadas</td><td>a loja do registro</td></tr>
+        <tr><td>3º Nó</td><td class="f">setor do produto ∈ selecionados</td><td>via cadastro do material</td></tr>
+        <tr><td>4º Nó</td><td class="f">categoria do produto ∈ selecionadas</td><td>via cadastro do material</td></tr>
+        <tr><td>Fornecedor</td><td class="f">fornecedor ∈ selecionados</td><td>o fornecedor do registro</td></tr>
+        <tr><td>Unidade</td><td class="f">UM do produto = UN ou KG</td><td>via cadastro do material</td></tr>
+      </tbody>
+    </table></div>
+    <p class="nota">As duas caixas de busca (na tabela de lojas e na de itens) não são filtros do painel:
+      escondem linhas só daquela tabela, depois de tudo somado — e o total do rodapé acompanha o que ficou visível.</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Passo 4</div>
+    <h2>Medida × visão</h2>
+    <p>A <b>medida</b> escolhe qual par de acumuladores usar. Chame de <code>a</code> o lado da entrada e
+      <code>b</code> o da saída:</p>
+    <div class="tw"><table>
+      <thead><tr><th>Medida</th><th>a — entradas</th><th>b — saídas</th></tr></thead>
+      <tbody>
+        <tr><td>Quantidade</td><td class="f">qi</td><td class="f">qo</td></tr>
+        <tr><td>Custo líquido</td><td class="f">li</td><td class="f">lo</td></tr>
+        <tr><td>Custo CSGM</td><td class="f">ci</td><td class="f">co</td></tr>
+      </tbody>
+    </table></div>
+    <p>A <b>visão</b> decide a conta final:</p>
+    <div class="tw"><table>
+      <thead><tr><th>Visão</th><th>Número mostrado</th><th>Lê-se como</th></tr></thead>
+      <tbody>
+        <tr><td>Resultado</td><td class="f">a − b</td><td>o que sobrou no depósito, já compensado</td></tr>
+        <tr><td>Entradas</td><td class="f">a</td><td>só o que entrou</td></tr>
+        <tr><td>Saídas</td><td class="f">b</td><td>só o que saiu</td></tr>
+        <tr><td>Movimentação</td><td class="f">a + b</td><td>volume tratado, sem compensar sinal</td></tr>
+      </tbody>
+    </table></div>
+    <p class="nota">Medida e visão mandam nos gráficos e nas listas de produto e fornecedor. Os indicadores
+      e as tabelas mostram os componentes sempre — entrada, saída e resultado lado a lado — para você não
+      depender do que está selecionado.</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Passo 5</div>
+    <h2>Campo a campo</h2>
+
+    <h3>Indicadores do topo</h3>
+    <div class="tw"><table>
+      <thead><tr><th>Campo</th><th>Conta</th></tr></thead>
+      <tbody>
+        <tr><td>Quantidade líquida (un)</td><td class="f w">Σqi − Σqo, somando todo o recorte</td></tr>
+        <tr><td>↳ Entradas / Saídas</td><td class="f w">Σqi / Σqo</td></tr>
+        <tr><td>Resultado (R$)</td><td class="f w">Σli − Σlo &nbsp;<i>(Σci − Σco com a medida CSGM)</i></td></tr>
+        <tr><td>Movimentado (R$)</td><td class="f w">Σli + Σlo</td></tr>
+        <tr><td>Lojas</td><td class="f w">lojas com Σn &gt; 0 &nbsp;<i>· “124 na base” = total do modelo</i></td></tr>
+        <tr><td>Produtos</td><td class="f w">produtos com Σn &gt; 0 &nbsp;<i>· abaixo, fornecedores com Σn &gt; 0</i></td></tr>
+        <tr><td>Lançamentos</td><td class="f w">Σn</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Ranking de lojas · Hierarquia de mercadoria</h3>
+    <div class="tw"><table>
+      <thead><tr><th>Elemento</th><th>Conta</th></tr></thead>
+      <tbody>
+        <tr><td>Comprimento da barra</td><td class="f w">medida × visão, somada na loja (ou no nó)</td></tr>
+        <tr><td>Ordem</td><td class="f w">|valor| decrescente</td></tr>
+        <tr><td>Quantas aparecem</td><td class="f w">15 lojas · 10 no 4º nó · todos os 7 no 3º nó</td></tr>
+        <tr><td>Rótulo na ponta</td><td class="f w">o próprio valor da barra</td></tr>
+        <tr><td>Eixo</td><td class="f w">de min(0, menor valor) a max(0, maior valor)</td></tr>
+        <tr><td>Cor</td><td class="f w">azul quando ≥ 0, vermelho quando &lt; 0 (só na visão Resultado)</td></tr>
+        <tr><td>3º nó</td><td class="f w">soma dos 4º nós pendurados nele</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Tabela “Quantidade e valor por loja”</h3>
+    <div class="tw"><table>
+      <thead><tr><th>Coluna</th><th>Conta</th></tr></thead>
+      <tbody>
+        <tr><td>Lanç.</td><td class="f w">Σn da loja</td></tr>
+        <tr><td>Qtd entrada / saída</td><td class="f w">Σqi / Σqo</td></tr>
+        <tr><td>Qtd líquida</td><td class="f w">Σqi − Σqo</td></tr>
+        <tr><td>R$ entrada / saída</td><td class="f w">Σli / Σlo &nbsp;<i>(ci/co com CSGM)</i></td></tr>
+        <tr><td>R$ resultado</td><td class="f w">Σli − Σlo</td></tr>
+        <tr><td>Linha de total</td><td class="f w">soma das linhas visíveis, já com a busca aplicada</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Tabela “Itens com trocas lançadas”</h3>
+    <div class="tw"><table>
+      <thead><tr><th>Coluna</th><th>Conta</th></tr></thead>
+      <tbody>
+        <tr><td>Quais itens listam</td><td class="f w">todo produto com Σn &gt; 0 no recorte — não é um top N</td></tr>
+        <tr><td>Últ. lanç.</td><td class="f w">maior mês em que o item teve lançamento no recorte</td></tr>
+        <tr><td>Lanç.</td><td class="f w">Σn do produto</td></tr>
+        <tr><td>Qtd entrada / saída / líquida</td><td class="f w">Σqi · Σqo · Σqi − Σqo</td></tr>
+        <tr><td>R$ entrada / saída / resultado</td><td class="f w">Σli · Σlo · Σli − Σlo</td></tr>
+        <tr><td>Hierarquia (3º › 4º)</td><td class="f w">do cadastro do material</td></tr>
+        <tr><td>Fornecedor</td><td class="f w">o único encontrado no recorte; “vários fornecedores” se houver mais de um</td></tr>
+        <tr><td>Linha de total</td><td class="f w">soma das linhas visíveis — com uma loja selecionada, bate com a linha dela na tabela acima</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Evolução mensal</h3>
+    <div class="tw"><table>
+      <thead><tr><th>Visão</th><th>Como a coluna do mês é desenhada</th></tr></thead>
+      <tbody>
+        <tr><td>Resultado</td><td class="f w">uma barra assinada: a − b, para cima se ≥ 0, para baixo se &lt; 0</td></tr>
+        <tr><td>Entradas</td><td class="f w">uma barra: a</td></tr>
+        <tr><td>Saídas</td><td class="f w">uma barra: b</td></tr>
+        <tr><td>Movimentação</td><td class="f w">duas empilhadas: a embaixo, b em cima — altura total a + b</td></tr>
+        <tr><td>Rótulo solto</td><td class="f w">só no mês de maior |valor| do período</td></tr>
+        <tr><td>Tooltip</td><td class="f w">sempre os cinco: a, b, a − b, a + b e Σn</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Listas de Produtos e Fornecedores</h3>
+    <div class="tw"><table>
+      <thead><tr><th>Elemento</th><th>Conta</th></tr></thead>
+      <tbody>
+        <tr><td>Valor</td><td class="f w">medida × visão, somada no produto (ou fornecedor)</td></tr>
+        <tr><td>Ordem e corte</td><td class="f w">|valor| decrescente, 15 primeiros</td></tr>
+        <tr><td>Barrinha</td><td class="f w">|valor| ÷ maior |valor| da lista × 100%</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Planilha exportada</h3>
+    <p>Toda aba traz as <b>dez medidas</b>, nas duas bases de custo, independentes da medida e da visão
+      que estiverem na tela: <code>Lançamentos</code>, <code>Qtd entrada</code>, <code>Qtd saída</code>,
+      <code>Qtd líquida</code>, <code>Custo líquido entrada/saída/resultado</code> e
+      <code>Custo CSGM entrada/saída/resultado</code>. A aba <b>Base detalhada</b> é uma linha por registro
+      do grão loja × mês × produto × fornecedor — o nível mais fino que o modelo guarda.</p>
+  </section>
+
+  <section>
+    <h2>Precisão e limites</h2>
+    <ul class="lim">
+      <li><b>Arredondamento.</b> O modelo guarda quantidade com 3 casas e valor com 2. As somas usam esses
+        números já arredondados; a diferença possível é de meio centavo por registro.</li>
+      <li><b>UN e KG somados.</b> A quantidade mistura as duas unidades (96.221 linhas em UN, 9.797 em KG).
+        Para um total homogêneo, use o filtro de unidade.</li>
+      <li><b>Sem dedução de duplicatas.</b> Como <code>MBLNR</code> não veio preenchido, não dá para separar
+        linhas idênticas de documentos diferentes. As 5.923 repetições são mantidas e somam, igual ao relatório.</li>
+      <li><b>Sinal coerente.</b> Em 106.018 linhas, o sinal do valor sempre acompanha o da quantidade —
+        nenhuma linha cai num lado com o valor puxando para o outro.</li>
+      <li><b>Custo, não venda.</b> <code>VERPR_LIQUIDO_TOTAL</code> e <code>VERPR_CSGM_TOTAL</code> são custos de
+        estoque. Os dois divergem em 61% das linhas, por isso as duas medidas existem em separado.</li>
+      <li><b>Conferência.</b> Sobre o arquivo inteiro: 46.072,2 un de resultado, R$ 334.642,32 de custo líquido,
+        R$ 361.897,63 de CSGM e 106.018 lançamentos — os mesmos números pelo pipeline em Python e pelo leitor
+        do navegador.</li>
+    </ul>
+  </section>
+
+  <footer>Gerado a partir de <code>dashboard/template.html</code> e <code>scripts/build_model.py</code>.
+    Se a conta mudar no código, este documento precisa mudar junto.</footer>
+</div>

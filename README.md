@@ -42,6 +42,13 @@ Cada registro do fato guarda entradas e saídas separadas (`qi`/`qo` em quantida
 resultado (entradas − saídas), movimentação (entradas + saídas) ou cada lado isolado,
 sem voltar à base.
 
+## Cálculos
+
+`docs/calculos.html` documenta, campo a campo, a conta que produz cada número: o tratamento da linha
+do relatório, os sete acumuladores do grão, o filtro, a combinação medida × visão e a fórmula de cada
+indicador, barra, coluna de tabela e coluna exportada — com um exemplo conferido de ponta a ponta.
+Se a conta mudar no código, esse documento muda junto.
+
 ## Tratamentos aplicados
 
 - **Sinal SAP invertido**: `132.60-` vira `-132.60`.
