@@ -48,72 +48,105 @@ h1,h2,h3{font-family:Archivo, system-ui, sans-serif; margin:0; text-wrap:balance
   text-transform:uppercase; color:var(--muted)}
 h1{font-size:clamp(24px,3.4vw,34px); font-weight:700; margin-top:6px}
 .sub{color:var(--ink-2); margin-top:6px; max-width:62ch}
-.meta{display:flex; gap:22px; flex-wrap:wrap; font-size:12px; color:var(--ink-2)}
-.meta b{display:block; font-family:Archivo,sans-serif; font-size:15px; color:var(--ink); font-weight:600;
-  font-variant-numeric:tabular-nums}
+.meta{display:flex; gap:0 10px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-2);
+  align-items:baseline; max-width:60ch}
+.meta .rot{font-family:Archivo,sans-serif; font-size:10px; font-weight:600; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--muted)}
+.meta b{color:var(--ink); font-weight:500; font-variant-numeric:tabular-nums}
+.meta i{color:var(--hair); font-style:normal}
 
 /* ---------- barra de filtros ---------- */
 .bar{position:sticky; top:0; z-index:40; background:var(--plane);
-  border-top:1px solid var(--hair); border-bottom:1px solid var(--hair);
-  box-shadow:0 8px 18px -14px rgba(0,0,0,.55); margin-bottom:20px}
-.bar-in{max-width:1360px; margin:0 auto; padding:10px 20px; display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+  border-bottom:1px solid var(--hair); box-shadow:0 10px 20px -18px rgba(0,0,0,.6); margin-bottom:22px}
+.bar-in{max-width:1360px; margin:0 auto; padding:11px 20px; display:flex; flex-wrap:wrap; gap:7px;
+  align-items:center}
 .grp{display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0}
 .grp-label{font-family:Archivo,sans-serif; font-size:10px; font-weight:600; letter-spacing:.1em;
   text-transform:uppercase; color:var(--muted); padding-right:2px}
-.spacer{flex:1 1 12px}
+.sep{width:1px; height:20px; background:var(--hair); flex:none; margin:0 3px}
+.spacer{flex:1 1 10px}
 button, select, input{font:inherit; color:inherit}
-.ctl{display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 10px;
-  background:var(--surface); border:1px solid var(--hair); border-radius:7px; cursor:pointer;
-  white-space:nowrap; transition:border-color .12s, background .12s}
+.ctl{display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 11px;
+  background:var(--surface); border:1px solid var(--hair); border-radius:8px; cursor:pointer;
+  white-space:nowrap; font-size:13.5px; transition:border-color .12s, background .12s, box-shadow .12s}
 .ctl:hover{border-color:var(--axis); background:var(--surface-2)}
-.ctl[aria-expanded="true"]{border-color:var(--focus)}
-.ctl .cnt{font-size:11px; font-weight:600; color:var(--in); font-variant-numeric:tabular-nums}
-.ctl .car{color:var(--muted); font-size:10px}
-.seg{display:inline-flex; background:var(--surface); border:1px solid var(--hair); border-radius:7px; overflow:hidden}
-.seg button{height:32px; padding:0 11px; white-space:nowrap; background:none; border:0; cursor:pointer; color:var(--ink-2);
-  font-size:13px; border-right:1px solid var(--hair-2)}
-.seg button:last-child{border-right:0}
+.ctl[aria-expanded="true"]{border-color:var(--focus); box-shadow:0 0 0 3px var(--in-soft)}
+.ctl.on{border-color:var(--focus)}
+.ctl .cnt{display:inline-grid; place-items:center; min-width:19px; height:19px; padding:0 5px;
+  border-radius:99px; font-size:11px; font-weight:600; font-variant-numeric:tabular-nums;
+  background:var(--surface-2); color:var(--muted)}
+.ctl.on .cnt{background:var(--in); color:#fff}
+.ctl .cnt[hidden]{display:none}
+.ctl .car{color:var(--muted); font-size:9px; margin-left:-1px}
+select.ctl{padding-right:8px; max-width:min(340px,100%)}
+.seg{display:inline-flex; background:var(--surface); border:1px solid var(--hair); border-radius:8px;
+  overflow:hidden; padding:2px; gap:2px}
+.seg button{height:28px; padding:0 11px; white-space:nowrap; background:none; border:0; cursor:pointer;
+  color:var(--ink-2); font-size:13px; border-radius:6px; transition:background .12s, color .12s}
 .seg button:hover{background:var(--surface-2); color:var(--ink)}
 .seg button[aria-pressed="true"]{background:var(--in); color:#fff; font-weight:500}
-.linkbtn{background:none; border:0; cursor:pointer; color:var(--ink-2); font-size:13px; text-decoration:underline;
-  text-underline-offset:3px; padding:4px 2px}
-.linkbtn:hover{color:var(--ink)}
-:focus-visible{outline:2px solid var(--focus); outline-offset:2px; border-radius:4px}
+.acao{display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 13px; border-radius:8px;
+  border:1px solid var(--in); background:var(--in); color:#fff; font-size:13.5px; font-weight:500;
+  cursor:pointer; white-space:nowrap; transition:filter .12s}
+.acao:hover{filter:brightness(1.08)}
+.acao[disabled]{opacity:.6; cursor:progress}
+.linkbtn{background:none; border:0; cursor:pointer; color:var(--ink-2); font-size:13px;
+  padding:6px 4px; border-radius:6px}
+.linkbtn:hover{color:var(--ink); background:var(--surface-2)}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px; border-radius:5px}
 
-/* ---------- popover de selecao multipla ---------- */
-.pop{position:absolute; z-index:60; width:320px; max-width:calc(100vw - 24px); background:var(--surface);
-  border:1px solid var(--hair); border-radius:10px; box-shadow:var(--shadow); padding:8px; display:none;
-  max-height:calc(100vh - 20px); overflow:auto}
-.pop.open{display:block}
-.pop input[type="search"]{width:100%; height:32px; padding:0 10px; border-radius:6px; background:var(--surface-2);
-  border:1px solid var(--hair); margin-bottom:6px}
-.pop .acts{display:flex; gap:10px; padding:2px 6px 8px; border-bottom:1px solid var(--hair-2); margin-bottom:6px}
-.pop .list{max-height:290px; overflow:auto}
-.opt{display:flex; align-items:center; gap:9px; padding:6px 8px; border-radius:6px; cursor:pointer}
+/* ---------- painéis flutuantes ---------- */
+.pop{position:fixed; z-index:60; width:420px; max-width:calc(100vw - 24px); background:var(--surface);
+  border:1px solid var(--hair); border-radius:12px; box-shadow:var(--shadow); display:none;
+  flex-direction:column; overflow:hidden; resize:both; min-width:300px; min-height:280px;
+  max-height:calc(100vh - 24px)}
+.pop.open{display:flex}
+.pop:not(.pop-lg){height:min(70vh,520px)}
+.pop-lg .pop-body{padding:14px 16px 16px}
+.pop.pop-forn{width:560px}
+.pop.pop-lg{width:400px; resize:none; min-height:0}
+.pop-head{display:flex; align-items:center; gap:10px; padding:11px 12px 10px 14px;
+  border-bottom:1px solid var(--hair-2); cursor:grab; user-select:none; flex:none}
+.pop-head:active{cursor:grabbing}
+.pop-head h4{font-family:Archivo,sans-serif; font-size:13.5px; font-weight:600; margin:0; flex:1;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.pop-head .qt{font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap}
+.pop-x{background:none; border:0; cursor:pointer; color:var(--muted); font-size:17px; line-height:1;
+  padding:2px 5px; border-radius:6px}
+.pop-x:hover{color:var(--ink); background:var(--surface-2)}
+.pop-body{padding:10px 12px 0; flex:none}
+.pop input[type="search"]{width:100%; height:34px; padding:0 11px; border-radius:8px;
+  background:var(--surface-2); border:1px solid var(--hair); font-size:13.5px}
+.pop input[type="search"]:focus{border-color:var(--focus); outline:none; box-shadow:0 0 0 3px var(--in-soft)}
+.pop .acts{display:flex; gap:4px; align-items:center; padding:8px 12px 8px; flex-wrap:wrap; flex:none}
+.pop .list{flex:1 1 auto; min-height:80px; overflow:auto; padding:2px 8px 8px}
+.opt{display:grid; grid-template-columns:16px minmax(0,1fr) auto; gap:10px; align-items:start;
+  padding:7px 8px; border-radius:7px; cursor:pointer}
 .opt:hover{background:var(--surface-2)}
-.opt input{accent-color:var(--in); width:15px; height:15px; flex:none}
-.opt .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.opt .cd{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--muted); flex:none}
-.pop.pop-lg{width:360px}
-.pop h4{font-family:Archivo,sans-serif; font-size:13px; font-weight:600; margin:2px 4px 6px}
-.pop .hint{font-size:12px; color:var(--ink-2); margin:0 4px 10px; line-height:1.45}
-.pop .status{font-size:12px; color:var(--ink-2); margin:10px 4px 4px; line-height:1.45; min-height:1.2em}
-.drop{display:flex; flex-direction:column; align-items:center; gap:3px; padding:16px 12px; cursor:pointer;
-  border:1px dashed var(--axis); border-radius:9px; background:var(--surface-2); text-align:center}
+.opt input{accent-color:var(--in); width:15px; height:15px; margin-top:2px}
+.opt .nm{min-width:0; font-size:13.5px; line-height:1.35; word-break:break-word}
+.opt .cd{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--muted); white-space:nowrap;
+  margin-top:1px}
+.pop-foot{display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:9px 12px; border-top:1px solid var(--hair-2); background:var(--surface-2); flex:none;
+  font-size:12px; color:var(--ink-2)}
+.pop-foot .ok{height:28px; padding:0 14px; border-radius:7px; border:1px solid var(--hair);
+  background:var(--surface); color:var(--ink); font-size:12.5px; cursor:pointer}
+.pop-foot .ok:hover{border-color:var(--axis)}
+.pop h4.tit{font-family:Archivo,sans-serif; font-size:13.5px; font-weight:600; margin:0 0 6px}
+.pop .hint{font-size:12.5px; color:var(--ink-2); margin:0 0 12px; line-height:1.5}
+.pop .status{font-size:12.5px; color:var(--ink-2); margin:12px 0 2px; line-height:1.5; min-height:1.3em}
+.drop{display:flex; flex-direction:column; align-items:center; gap:3px; padding:18px 12px; cursor:pointer;
+  border:1px dashed var(--axis); border-radius:10px; background:var(--surface-2); text-align:center}
 .drop:hover,.drop.on{border-color:var(--in); background:var(--in-soft)}
-.drop b{font-size:13px} .drop span{font-size:11.5px; color:var(--muted)}
-.opts{display:flex; flex-direction:column; gap:2px; max-height:320px; overflow:auto}
-.optbtn{display:flex; flex-direction:column; align-items:flex-start; gap:1px; width:100%; text-align:left;
-  padding:7px 9px; background:none; border:0; border-radius:7px; cursor:pointer}
-.optbtn:hover{background:var(--surface-2)}
-.optbtn b{font-size:13px; font-weight:500}
-.optbtn small{font-size:11px; color:var(--muted)}
-.chips{display:flex; flex-wrap:wrap; gap:6px; padding:0 0 12px}
-.chip{display:inline-flex; align-items:center; gap:7px; height:26px; padding:0 6px 0 10px; font-size:12px;
+.drop b{font-size:13.5px} .drop span{font-size:11.5px; color:var(--muted)}
+.chips{display:flex; flex-wrap:wrap; gap:6px; padding:0 0 14px; align-items:center}
+.chip{display:inline-flex; align-items:center; gap:7px; height:27px; padding:0 6px 0 11px; font-size:12px;
   background:var(--surface); border:1px solid var(--hair); border-radius:99px; color:var(--ink-2)}
 .chip b{color:var(--ink); font-weight:500}
-.chip button{background:none; border:0; cursor:pointer; color:var(--muted); font-size:14px; line-height:1; padding:2px 4px}
-.chip button:hover{color:var(--out)}
+.chip button{background:none; border:0; cursor:pointer; color:var(--muted); font-size:14px; line-height:1;
+  padding:2px 4px; border-radius:50%}
+.chip button:hover{color:var(--out); background:var(--out-soft)}
 
 /* ---------- indicadores ---------- */
 .vazio{max-width:640px; margin:8px auto 28px; text-align:center; padding:34px 26px 30px}
@@ -127,15 +160,16 @@ button, select, input{font:inherit; color:inherit}
 .vazio code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:var(--surface-2);
   padding:1px 5px; border-radius:4px}
 .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(186px,1fr)); gap:1px; background:var(--hair);
-  border:1px solid var(--hair); border-radius:12px; overflow:hidden; margin-bottom:20px}
-.kpi{background:var(--surface); padding:14px 16px 15px}
-.kpi .k{font-family:Archivo,sans-serif; font-size:10.5px; font-weight:600; letter-spacing:.1em;
+  border:1px solid var(--hair); border-radius:14px; overflow:hidden; margin-bottom:22px}
+.kpi{background:var(--surface); padding:15px 17px 16px; display:flex; flex-direction:column}
+.kpi .k{font-family:Archivo,sans-serif; font-size:10.5px; font-weight:600; letter-spacing:.09em;
   text-transform:uppercase; color:var(--muted)}
-.kpi .v{font-size:23px; white-space:nowrap; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums; letter-spacing:-.02em;
-  line-height:1.15}
+.kpi .v{font-size:25px; white-space:nowrap; font-weight:600; margin-top:7px;
+  font-variant-numeric:tabular-nums; letter-spacing:-.022em; line-height:1.1}
+.kpi.sec .v{font-size:20px; font-weight:500}
 .kpi .v .u{font-size:14px; color:var(--ink-2); font-weight:400; margin-left:3px}
-.kpi .d{font-size:12px; color:var(--ink-2); margin-top:5px; display:flex; gap:10px; flex-wrap:wrap;
-  font-variant-numeric:tabular-nums}
+.kpi .d{font-size:12px; color:var(--ink-2); margin-top:auto; padding-top:8px; display:flex; gap:12px;
+  flex-wrap:wrap; font-variant-numeric:tabular-nums}
 .dot{display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:5px; vertical-align:baseline}
 .dot.i{background:var(--in)} .dot.o{background:var(--out)}
 
@@ -145,13 +179,15 @@ button, select, input{font:inherit; color:inherit}
 .row.two.solo{grid-template-columns:minmax(0,1fr)}
 .row.half{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (max-width:900px){.row.two,.row.half{grid-template-columns:minmax(0,1fr)}}
-.card{background:var(--surface); border:1px solid var(--hair); border-radius:12px; padding:18px 18px 14px;
+.card{background:var(--surface); border:1px solid var(--hair); border-radius:14px; padding:20px 20px 16px;
   min-width:0}
-.card > header{display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:14px}
-.card > header > div:first-child{min-width:0}
+.card > header{display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
+  margin-bottom:16px; flex-wrap:wrap}
+.card > header > div:first-child{min-width:0; flex:1 1 auto}
 .card > header .seg{flex:none}
-.card h2{font-size:15px; font-weight:600}
-.card .cap{font-size:12px; color:var(--ink-2); margin-top:3px; max-width:64ch}
+.card > header .grp{flex:0 1 auto; max-width:100%}
+.card h2{font-size:15.5px; font-weight:600; letter-spacing:-.005em}
+.card .cap{font-size:12.5px; color:var(--ink-2); margin-top:4px; max-width:70ch; line-height:1.5}
 .legend{display:flex; gap:14px; font-size:12px; color:var(--ink-2); align-items:center; flex-wrap:wrap}
 .legend span{display:inline-flex; align-items:center}
 .plot{width:100%; overflow:visible; display:block}
@@ -166,21 +202,24 @@ details.tbl summary:hover{color:var(--ink)}
 
 /* ---------- tabelas ---------- */
 table{border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums}
-th,td{padding:7px 10px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--hair-2)}
+th,td{padding:8px 12px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--hair-2)}
 th:first-child,td:first-child{text-align:left}
 th.txt,td.txt{text-align:left}
-thead th{position:sticky; top:0; background:var(--surface); z-index:2; font-family:Archivo,sans-serif; font-size:10.5px;
-  font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--hair)}
+thead th{position:sticky; top:0; background:var(--surface); z-index:2; font-family:Archivo,sans-serif;
+  font-size:10.5px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--muted);
+  border-bottom:1px solid var(--axis); padding-top:6px; padding-bottom:9px}
 thead th.s{cursor:pointer; user-select:none}
 thead th.s:hover{color:var(--ink)}
 thead th .ar{color:var(--in); margin-left:3px}
 tbody tr:hover{background:var(--surface-2)}
+tfoot td{background:var(--surface-2); position:sticky; bottom:0}
 td.code{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted)}
 td.nm{white-space:normal; min-width:190px}
 .neg{color:var(--out)}
-.tall{max-height:520px; overflow:auto}
-.tsearch{height:30px; padding:0 10px; border-radius:6px; background:var(--surface-2); border:1px solid var(--hair);
-  width:210px}
+.tall{max-height:540px; overflow:auto}
+.tsearch{height:34px; padding:0 11px; border-radius:8px; background:var(--surface-2);
+  border:1px solid var(--hair); width:230px; max-width:100%; font-size:13.5px}
+.tsearch:focus{border-color:var(--focus); outline:none; box-shadow:0 0 0 3px var(--in-soft)}
 
 /* ---------- lista com barra ---------- */
 .rank{display:flex; flex-direction:column}
@@ -203,6 +242,10 @@ td.nm{white-space:normal; min-width:190px}
 #tip .r b{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
 #tip .r .key{display:inline-block; width:12px; height:2px; border-radius:2px; margin-right:6px; vertical-align:middle}
 #tip .sep{border-top:1px solid var(--hair-2); margin:5px 0}
+#toast{position:fixed; right:18px; bottom:18px; z-index:90; background:var(--surface);
+  border:1px solid var(--hair); border-radius:10px; box-shadow:var(--shadow); padding:12px 15px;
+  font-size:13px; line-height:1.5; max-width:360px; display:none; color:var(--ink)}
+#toast.on{display:block}
 
 /* ---------- rodape ---------- */
 footer{margin-top:30px; padding-top:18px; border-top:1px solid var(--hair); font-size:12px; color:var(--ink-2)}
@@ -230,18 +273,19 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
 
 <div class="bar">
   <div class="bar-in">
-    <div class="grp"><span class="grp-label">Período</span>
+    <div class="grp">
       <select class="ctl" id="m0" aria-label="Mês inicial"></select>
-      <span style="color:var(--muted)">→</span>
+      <span style="color:var(--muted);font-size:12px">até</span>
       <select class="ctl" id="m1" aria-label="Mês final"></select>
-      <div class="seg" id="presets">
+      <div class="seg" id="presets" role="group" aria-label="Atalhos de período">
         <button type="button" data-p="12">12m</button>
         <button type="button" data-p="24">24m</button>
         <button type="button" data-p="ano">Ano</button>
         <button type="button" data-p="all">Tudo</button>
       </div>
     </div>
-    <div class="grp"><span class="grp-label">Filtros</span>
+    <span class="sep"></span>
+    <div class="grp">
       <button type="button" class="ctl" id="f-loja" aria-expanded="false">Lojas <span class="cnt"></span><span class="car">▾</span></button>
       <button type="button" class="ctl" id="f-grupo" aria-expanded="false">3º Nó <span class="cnt"></span><span class="car">▾</span></button>
       <button type="button" class="ctl" id="f-cat" aria-expanded="false">4º Nó <span class="cnt"></span><span class="car">▾</span></button>
@@ -251,15 +295,15 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
         <button type="button" data-u="UN">UN</button>
         <button type="button" data-u="KG">KG</button>
       </div>
+      <button type="button" class="linkbtn" id="reset">Limpar</button>
     </div>
     <div class="spacer"></div>
-    <div class="grp"><span class="grp-label">Medida</span>
+    <div class="grp">
       <div class="seg" id="medida" role="group" aria-label="Medida">
         <button type="button" data-m="qtd">Quantidade</button>
         <button type="button" data-m="liq">Valor (R$)</button>
       </div>
-    </div>
-    <div class="grp"><span class="grp-label">Visão</span>
+      <span class="sep"></span>
       <div class="seg" id="visao" role="group" aria-label="Visão">
         <button type="button" data-v="liq">Resultado</button>
         <button type="button" data-v="in">Entradas</button>
@@ -267,10 +311,10 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
         <button type="button" data-v="tot">Movimentação</button>
       </div>
     </div>
-    <button type="button" class="linkbtn" id="reset">Limpar filtros</button>
-    <div class="grp"><span class="grp-label">Base</span>
+    <span class="sep"></span>
+    <div class="grp">
       <button type="button" class="ctl" id="b-base" aria-expanded="false">Atualizar dados <span class="car">▾</span></button>
-      <button type="button" class="ctl" id="b-exp" aria-expanded="false">Baixar planilha <span class="car">▾</span></button>
+      <button type="button" class="acao" id="b-exp">Baixar filtro</button>
     </div>
   </div>
 </div>
@@ -397,6 +441,7 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
 </div>
 
 <div id="tip" role="status" aria-live="polite"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script type="application/json" id="model">__MODEL_JSON__</script>
 <script>
@@ -684,7 +729,7 @@ function desenhar(){
     {k:"Produtos",v:nf0.format(nProd),d:[["",nf0.format(nForn)+" fornecedores"]]},
     {k:"Lançamentos",v:nf0.format(T.n[0]),d:[["","linhas do ZMMR270"]]}];
   const box=$("kpis"); box.textContent="";
-  kpis.forEach(k=>{ const c=el("div",{class:"kpi"});
+  kpis.forEach((k,ki)=>{ const c=el("div",{class:"kpi"+(ki>=3?" sec":"")});
     c.appendChild(el("div",{class:"k",text:k.k}));
     const v=el("div",{class:"v",text:k.v}); if(k.u) v.appendChild(el("span",{class:"u",text:k.u}));
     c.appendChild(v);
@@ -850,55 +895,119 @@ function chips(){
 
 function atualizar(){ calcular(); desenhar(); sincronizar(); }
 
-/* ---------- seletor multiplo ---------- */
-function multi(btnId,titulo,itens,set){
-  const btn=$(btnId), pop=el("div",{class:"pop"});
-  pop.style.position="fixed"; document.body.appendChild(pop);
-  let lista=null;
+/* ---------- seletor multiplo: painel flutuante, arrastavel e redimensionavel ---------- */
+function arrastar(pop,alca){
+  alca.addEventListener("pointerdown",e=>{
+    if(e.target.closest("button")) return;
+    const r=pop.getBoundingClientRect(), dx=e.clientX-r.left, dy=e.clientY-r.top;
+    alca.setPointerCapture(e.pointerId);
+    const mover=ev=>{
+      pop.style.left=Math.max(6,Math.min(ev.clientX-dx,innerWidth-r.width-6))+"px";
+      pop.style.top =Math.max(6,Math.min(ev.clientY-dy,innerHeight-40))+"px";
+    };
+    const soltar=()=>{ alca.removeEventListener("pointermove",mover);
+      alca.removeEventListener("pointerup",soltar); };
+    alca.addEventListener("pointermove",mover);
+    alca.addEventListener("pointerup",soltar);
+  });
+}
+
+function multi(btnId,titulo,itens,set,largo){
+  const btn=$(btnId), pop=el("div",{class:"pop"+(largo?" pop-forn":"")});
+  document.body.appendChild(pop);
+  let campo=null, lista=null, rodape=null;
+
+  function visiveis(){
+    const q=(campo&&campo.value||"").trim().toLowerCase();
+    return itens().filter(it=>!q||it.nm.toLowerCase().includes(q)||
+      String(it.cd).toLowerCase().includes(q));
+  }
+  function pintar(){
+    const vis=visiveis(), total=itens().length;
+    lista.textContent="";
+    if(!vis.length) lista.appendChild(el("p",{class:"empty",text:"Nada encontrado."}));
+    vis.slice(0,600).forEach(it=>{
+      const lb=el("label",{class:"opt"}), cb=el("input",{type:"checkbox"});
+      cb.checked=set.has(it.v);
+      cb.addEventListener("change",()=>{ cb.checked?set.add(it.v):set.delete(it.v);
+        atualizar(); rodapeTexto(); });
+      lb.appendChild(cb);
+      lb.appendChild(el("span",{class:"nm",text:it.nm}));
+      if(it.cd) lb.appendChild(el("span",{class:"cd",text:it.cd}));
+      lista.appendChild(lb);
+    });
+    if(vis.length>600)
+      lista.appendChild(el("p",{class:"empty",text:"Refine a busca — "+nf0.format(vis.length)+" resultados."}));
+    marcarBtns(vis.length,total);
+    rodapeTexto();
+  }
+  let bMarcar=null, bLimpar=null;
+  function marcarBtns(nVis,total){
+    if(!bMarcar) return;
+    const filtrando=nVis<total;
+    bMarcar.hidden=!filtrando; bMarcar.textContent="Marcar os "+nf0.format(nVis)+" encontrados";
+    bLimpar.textContent= set.size? "Limpar seleção" : "Todos selecionados";
+    bLimpar.disabled=!set.size;
+  }
+  function rodapeTexto(){
+    if(!rodape) return;
+    const total=itens().length;
+    rodape.textContent = set.size ? nf0.format(set.size)+" de "+nf0.format(total)+" selecionados"
+                                  : "Todos os "+nf0.format(total)+" incluídos";
+  }
   function montar(){
     pop.textContent="";
-    const busca=el("input",{type:"search",placeholder:"Buscar "+titulo,"aria-label":"Buscar "+titulo});
+    const head=el("div",{class:"pop-head"});
+    head.appendChild(el("h4",{text:titulo}));
+    const x=el("button",{class:"pop-x",type:"button","aria-label":"Fechar"});
+    x.textContent="×"; x.addEventListener("click",fechar);
+    head.appendChild(x); arrastar(pop,head); pop.appendChild(head);
+
+    const corpo=el("div",{class:"pop-body"});
+    campo=el("input",{type:"search",placeholder:"Buscar em "+titulo.toLowerCase(),
+      "aria-label":"Buscar em "+titulo.toLowerCase()});
+    campo.addEventListener("input",pintar);
+    corpo.appendChild(campo); pop.appendChild(corpo);
+
     const acts=el("div",{class:"acts"});
-    const todos=el("button",{class:"linkbtn",type:"button",text:"Todos"});
-    todos.addEventListener("click",()=>{set.clear();pintar(busca.value);atualizar();});
-    acts.appendChild(todos);
-    acts.appendChild(el("span",{style:"color:var(--muted);font-size:12px",
-      text:itens().length+" "+titulo.toLowerCase()}));
-    lista=el("div",{class:"list"});
-    function pintar(q){
-      lista.textContent="";
-      const f=q?q.trim().toLowerCase():"";
-      const vis=itens().filter(it=>!f||it.nm.toLowerCase().includes(f)||String(it.cd).toLowerCase().includes(f));
-      if(!vis.length){ lista.appendChild(el("p",{class:"empty",text:"Nada encontrado."})); return; }
-      vis.slice(0,500).forEach(it=>{
-        const lb=el("label",{class:"opt"}), cb=el("input",{type:"checkbox"});
-        cb.checked=set.has(it.v);
-        cb.addEventListener("change",()=>{ cb.checked?set.add(it.v):set.delete(it.v); atualizar(); });
-        lb.appendChild(cb); lb.appendChild(el("span",{class:"nm",text:it.nm}));
-        if(it.cd) lb.appendChild(el("span",{class:"cd",text:it.cd}));
-        lista.appendChild(lb);
-      });
-      if(vis.length>500) lista.appendChild(el("p",{class:"empty",text:"Refine a busca — "+vis.length+" resultados."}));
-    }
-    busca.addEventListener("input",()=>pintar(busca.value));
-    pop.appendChild(busca); pop.appendChild(acts); pop.appendChild(lista); pintar("");
+    bLimpar=el("button",{class:"linkbtn",type:"button"});
+    bLimpar.addEventListener("click",()=>{ set.clear(); pintar(); atualizar(); });
+    bMarcar=el("button",{class:"linkbtn",type:"button"});
+    bMarcar.addEventListener("click",()=>{ visiveis().forEach(it=>set.add(it.v)); pintar(); atualizar(); });
+    acts.appendChild(bLimpar); acts.appendChild(bMarcar); pop.appendChild(acts);
+
+    lista=el("div",{class:"list"}); pop.appendChild(lista);
+
+    const foot=el("div",{class:"pop-foot"});
+    rodape=el("span"); foot.appendChild(rodape);
+    const ok=el("button",{class:"ok",type:"button",text:"Fechar"});
+    ok.addEventListener("click",fechar); foot.appendChild(ok);
+    pop.appendChild(foot);
+    pintar();
   }
   function abrir(){
-    document.querySelectorAll(".pop.open").forEach(p=>{p.classList.remove("open");
-      const b=p.__btn; if(b)b.setAttribute("aria-expanded","false");});
+    document.querySelectorAll(".pop.open").forEach(o=>{ o.classList.remove("open");
+      const b=o.__btn; if(b) b.setAttribute("aria-expanded","false"); });
     montar(); pop.classList.add("open"); pop.__btn=btn; btn.setAttribute("aria-expanded","true");
-    const r=btn.getBoundingClientRect();
-    pop.style.left=Math.max(8,Math.min(r.left,innerWidth-pop.offsetWidth-8))+"px";
-    pop.style.top=Math.min(r.bottom+6,innerHeight-pop.offsetHeight-8)+"px";
-    const s=pop.querySelector("input"); if(s)s.focus();
+    pop.style.width=""; pop.style.height="";
+    const r=btn.getBoundingClientRect(), c=pop.getBoundingClientRect();
+    pop.style.left=Math.max(8,Math.min(r.left,innerWidth-c.width-8))+"px";
+    pop.style.top =Math.max(8,Math.min(r.bottom+6,innerHeight-c.height-8))+"px";
+    if(campo) campo.focus();
   }
   function fechar(){ pop.classList.remove("open"); btn.setAttribute("aria-expanded","false"); }
   btn.addEventListener("click",e=>{ e.stopPropagation();
     pop.classList.contains("open")?fechar():abrir(); });
-  pop.addEventListener("click",e=>e.stopPropagation());
-  document.addEventListener("click",fechar);
-  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&pop.classList.contains("open")){fechar();btn.focus();} });
-  return {atualizarContador(){ btn.querySelector(".cnt").textContent=set.size?String(set.size):"todas"; }};
+  pop.addEventListener("pointerdown",e=>e.stopPropagation());
+  document.addEventListener("pointerdown",()=>{ if(pop.classList.contains("open")) fechar(); });
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Escape"&&pop.classList.contains("open")){ fechar(); btn.focus(); } });
+  return {atualizarContador(){
+    const c=btn.querySelector(".cnt");
+    c.textContent = set.size? String(set.size) : "";
+    c.hidden = !set.size;
+    btn.classList.toggle("on", set.size>0);
+  }};
 }
 
 /* ================= leitura de um novo export do ZMMR270 =================
@@ -1172,7 +1281,21 @@ async function prepararDownloads(){
   try{ if(window.claude && typeof claude.use==="function") DL=await claude.use("downloads"); }
   catch(e){ DL=null; }
   MODO = DL ? "cap" : (EMBUTIDO ? "nenhum" : "blob");
-  const b=$("b-exp"); if(b) b.hidden=(MODO==="nenhum");
+  const b=$("b-exp");
+  if(b){ b.hidden=(MODO==="nenhum");
+    b.textContent = MODO==="cap" ? "Baixar filtro (.csv)" : "Baixar filtro (.xlsx)"; }
+}
+let toastT=null;
+function toast(txt){
+  const t=$("toast"); t.textContent=txt; t.classList.add("on");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),7000);
+}
+// Um clique, um arquivo: exatamente o recorte que está filtrado.
+async function baixarFiltro(){
+  const b=$("b-exp"); if(b.disabled) return;
+  const rot=b.textContent; b.disabled=true; b.textContent="Gerando…";
+  try{ await exportar(MODO==="cap" ? "det" : "xlsx", toast); }
+  finally{ b.disabled=false; b.textContent=rot; }
 }
 function baixarBlob(nome,dados,mime){
   const a=document.createElement("a"), url=URL.createObjectURL(new Blob([dados],{type:mime}));
@@ -1272,29 +1395,31 @@ async function restaurarBase(status){
     status("Base removida. Carregue um novo export."); }
 }
 
-/* ================= painéis de base e download ================= */
+/* ---------- painel simples (atualizar base) ---------- */
 function popSimples(btnId,montar){
   const btn=$(btnId); if(!btn) return;
   const pop=el("div",{class:"pop pop-lg"});
-  pop.style.position="fixed"; document.body.appendChild(pop);
+  document.body.appendChild(pop);
   function abrir(){
-    document.querySelectorAll(".pop.open").forEach(p=>{ p.classList.remove("open");
-      const b=p.__btn; if(b) b.setAttribute("aria-expanded","false"); });
+    document.querySelectorAll(".pop.open").forEach(o=>{ o.classList.remove("open");
+      const b=o.__btn; if(b) b.setAttribute("aria-expanded","false"); });
     pop.textContent=""; montar(pop); pop.classList.add("open"); pop.__btn=btn;
     btn.setAttribute("aria-expanded","true");
-    const r=btn.getBoundingClientRect();
-    pop.style.left=Math.max(8,Math.min(r.left,innerWidth-pop.offsetWidth-8))+"px";
-    pop.style.top=Math.min(r.bottom+6,Math.max(8,innerHeight-pop.offsetHeight-8))+"px";
+    const r=btn.getBoundingClientRect(), c=pop.getBoundingClientRect();
+    pop.style.left=Math.max(8,Math.min(r.left,innerWidth-c.width-8))+"px";
+    pop.style.top =Math.max(8,Math.min(r.bottom+6,innerHeight-c.height-8))+"px";
   }
   function fechar(){ pop.classList.remove("open"); btn.setAttribute("aria-expanded","false"); }
   btn.addEventListener("click",e=>{ e.stopPropagation();
     pop.classList.contains("open")?fechar():abrir(); });
-  pop.addEventListener("click",e=>e.stopPropagation());
-  document.addEventListener("click",fechar);
+  pop.addEventListener("pointerdown",e=>e.stopPropagation());
+  document.addEventListener("pointerdown",()=>{ if(pop.classList.contains("open")) fechar(); });
   document.addEventListener("keydown",e=>{
     if(e.key==="Escape"&&pop.classList.contains("open")){ fechar(); btn.focus(); } });
+  pop.__fechar=fechar;
 }
 
+/* ---------- area de arquivo, usada no estado vazio e no painel de base ---------- */
 function zonaArquivo(zona,status){
   let inp=zona.querySelector('input[type="file"]');
   if(!inp){ inp=el("input",{type:"file",accept:".txt,.csv,.tsv,text/plain"});
@@ -1309,50 +1434,28 @@ function zonaArquivo(zona,status){
 }
 
 function montarBase(pop){
-  pop.appendChild(el("h4",{text:"Atualizar a base"}));
-  pop.appendChild(el("p",{class:"hint",text:"Exporte o ZMMR270 como texto separado por ponto e vírgula e "+
-    "solte o arquivo aqui. O painel reconhece o layout com ou sem a coluna MBLNR, em UTF-8 ou ANSI, e "+
-    "refaz todos os cálculos no seu navegador — nada é enviado para fora."}));
+  const head=el("div",{class:"pop-head"});
+  head.appendChild(el("h4",{text:"Atualizar a base"}));
+  const x=el("button",{class:"pop-x",type:"button","aria-label":"Fechar"});
+  x.textContent="×"; x.addEventListener("click",()=>pop.__fechar&&pop.__fechar());
+  head.appendChild(x); arrastar(pop,head); pop.appendChild(head);
+
+  const corpo=el("div",{class:"pop-body"});
+  corpo.appendChild(el("p",{class:"hint",text:"Solte aqui o export do ZMMR270 em texto separado por "+
+    "ponto e vírgula. O painel reconhece o layout com ou sem a coluna MBLNR, em UTF-8 ou ANSI, e refaz "+
+    "todos os cálculos no seu navegador — nada é enviado para fora."}));
   const zona=el("label",{class:"drop"});
   zona.appendChild(el("b",{text:"Escolher arquivo"}));
   zona.appendChild(el("span",{text:"ou arraste o .txt para cá"}));
   const st=el("p",{class:"status",text:textoOrigem()});
   const status=t=>{ st.textContent=t; };
   zonaArquivo(zona,status);
-  pop.appendChild(zona); pop.appendChild(st);
+  corpo.appendChild(zona); corpo.appendChild(st);
   const rest=el("button",{class:"linkbtn",type:"button",
     text: MODELO_ORIGINAL ? "Restaurar a base publicada" : "Limpar a base carregada"});
   rest.addEventListener("click",()=>restaurarBase(status));
-  pop.appendChild(rest);
-}
-
-function contagem(id){
-  const conta=(A,n)=>{ let c=0; for(let i=0;i<n;i++) if(A.n[i]) c++; return c; };
-  if(id==="loja") return conta(D.L,LOJA.length)+" lojas";
-  if(id==="mes")  return conta(D.M,MES.length)+" meses";
-  if(id==="n3")   return conta(D.G,GRUPO.length)+" nós";
-  if(id==="n4")   return conta(D.C,CAT.length)+" nós";
-  if(id==="forn") return conta(D.Fo,FORN.length)+" fornecedores";
-  if(id==="prod") return conta(D.P,PROD.length)+" produtos";
-  if(id==="det")  return nf0.format(D.fato)+" linhas do grão loja × mês × produto";
-  return "filtros aplicados e totais do recorte";
-}
-function montarExport(pop){
-  pop.appendChild(el("h4",{text:"Baixar o que está filtrado"}));
-  pop.appendChild(el("p",{class:"hint",text: MODO==="cap"
-    ? "Cada arquivo sai em .csv com ponto e vírgula, já no padrão do Excel em português. O visualizador pede sua confirmação antes de salvar."
-    : "A planilha completa traz uma aba por recorte. Os .csv usam ponto e vírgula e abrem direto no Excel em português."}));
-  const st=el("p",{class:"status"});
-  const status=t=>{ st.textContent=t; };
-  const lista=el("div",{class:"opts"});
-  const opt=(titulo,sub,fn)=>{ const b=el("button",{class:"optbtn",type:"button"});
-    b.appendChild(el("b",{text:titulo})); b.appendChild(el("small",{text:sub}));
-    b.addEventListener("click",fn); lista.appendChild(b); };
-  if(MODO!=="cap")
-    opt("Planilha completa (.xlsx)","uma aba por recorte, com filtros, totais e a base detalhada",
-        ()=>exportar("xlsx",status));
-  RECORTES.forEach(r=>opt(r[1]+" (.csv)",contagem(r[0]),()=>exportar(r[0],status)));
-  pop.appendChild(lista); pop.appendChild(st);
+  corpo.appendChild(rest);
+  pop.appendChild(corpo);
 }
 
 /* ---------- controles ---------- */
@@ -1372,11 +1475,14 @@ function sincronizar(){
 
 function renderMeta(){
   const meta=$("meta"); meta.textContent="";
-  [["Lançamentos",nf0.format(M.meta.linhas_origem)],["Lojas",nf0.format(LOJA.length)],
-   ["Produtos",nf0.format(PROD.length)],["Fornecedores",nf0.format(FORN.length)],
-   ["Período",mesLongo(MES[0])+" – "+mesLongo(MES[MES.length-1])]].forEach(x=>{
-    const d=el("div"); d.appendChild(el("b",{text:x[1]}));
-    d.appendChild(document.createTextNode(x[0])); meta.appendChild(d); });
+  meta.appendChild(el("span",{class:"rot",text:"Base"}));
+  [[nf0.format(M.meta.linhas_origem),"lançamentos"],[nf0.format(LOJA.length),"lojas"],
+   [nf0.format(PROD.length),"produtos"],[nf0.format(FORN.length),"fornecedores"],
+   [mesLongo(MES[0])+" – "+mesLongo(MES[MES.length-1]),""]].forEach((x,i)=>{
+    if(i) meta.appendChild(el("i",{text:"·"}));
+    const d=el("span"); d.appendChild(el("b",{text:x[0]}));
+    if(x[1]) d.appendChild(document.createTextNode(" "+x[1]));
+    meta.appendChild(d); });
   $("fonte").textContent="Fonte: "+M.meta.fonte+" · "+nf0.format(M.meta.linhas_origem)+
     " linhas do export agregadas em "+nf0.format(M.meta.linhas_fato)+
     " registros no grão loja × mês × produto × fornecedor. "+textoOrigem();
@@ -1422,11 +1528,11 @@ function iniciar(){
     atualizar(); }));
 
   /* filtros */
-  contadores.push(multi("f-loja","Lojas",()=>LOJA.map((l,i)=>({v:i,nm:l[1],cd:l[0]+" · "+l[2]})),S.loja));
+  contadores.push(multi("f-loja","Lojas",()=>LOJA.map((l,i)=>({v:i,nm:l[1],cd:l[0]+" · "+l[2]})),S.loja,true));
   contadores.push(multi("f-grupo","Denominação 3º Nó",()=>GRUPO.map((g,i)=>({v:i,nm:g[1],cd:g[0]})),S.grupo));
   contadores.push(multi("f-cat","Denominação 4º Nó",()=>CAT.map((c,i)=>({v:i,nm:c[1],cd:c[0]}))
     .filter(it=>!S.grupo.size||S.grupo.has(gIx[CAT[it.v][2]])),S.cat));
-  contadores.push(multi("f-forn","Fornecedores",()=>FORN.map((f,i)=>({v:i,nm:f[1],cd:f[0]})),S.forn));
+  contadores.push(multi("f-forn","Fornecedores",()=>FORN.map((f,i)=>({v:i,nm:f[1],cd:f[0]})),S.forn,true));
   seg("un","un","u"); seg("medida","medida","m"); seg("visao","visao","v"); seg("nivel","nivel","n");
 
   $("q-loja").addEventListener("input",e=>{ S.busca=e.target.value; desenhar(); });
@@ -1446,7 +1552,7 @@ function iniciar(){
   new MutationObserver(()=>desenhar()).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
   popSimples("b-base",montarBase);
-  popSimples("b-exp",montarExport);
+  $("b-exp").addEventListener("click",baixarFiltro);
   zonaArquivo($("drop-vazio"),t=>{ $("status-vazio").textContent=t; });
   if(MODELO_ORIGINAL) aplicarModelo(MODELO_ORIGINAL); else mostrarVazio(true);
 

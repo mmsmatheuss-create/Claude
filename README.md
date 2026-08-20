@@ -96,9 +96,9 @@ inteiro. Com uma única loja no recorte o ranking de lojas sai da tela — uma b
 
 ## Exportar o recorte filtrado
 
-Botão **Baixar planilha**. Sai exatamente o que está filtrado, em oito recortes: filtros e totais,
-por loja, por mês, por 3º nó, por 4º nó, por fornecedor, por produto e a base detalhada no grão
-loja × mês × produto × fornecedor. Toda tabela traz as sete medidas (lançamentos, quantidade e reais, cada um
+Botão **Baixar filtro**: um clique, um arquivo com exatamente o recorte que está na tela, em oito
+abas — filtros e totais, por loja, por mês, por 3º nó, por 4º nó, por fornecedor, por produto e a
+base detalhada no grão loja × mês × produto × fornecedor. Toda tabela traz as sete medidas (lançamentos, quantidade e reais, cada um
 em entrada, saída e resultado), independente da medida escolhida na tela.
 
 - **.xlsx** — pasta completa, uma aba por recorte, com cabeçalho congelado, autofiltro e formato
