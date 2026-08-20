@@ -116,6 +116,16 @@ button, select, input{font:inherit; color:inherit}
 .chip button:hover{color:var(--out)}
 
 /* ---------- indicadores ---------- */
+.vazio{max-width:640px; margin:8px auto 28px; text-align:center; padding:34px 26px 30px}
+.vazio .eyebrow{margin-bottom:10px}
+.vazio h2{font-size:20px; margin-bottom:8px}
+.vazio p{color:var(--ink-2); font-size:13.5px; line-height:1.55; max-width:52ch; margin:0 auto}
+.vazio .drop{margin:20px auto 0; max-width:400px; padding:26px 16px}
+.vazio .status{min-height:1.4em}
+.vazio ul{text-align:left; max-width:440px; margin:18px auto 0; padding-left:18px; display:grid; gap:5px;
+  font-size:12.5px; color:var(--ink-2)}
+.vazio code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:var(--surface-2);
+  padding:1px 5px; border-radius:4px}
 .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(186px,1fr)); gap:1px; background:var(--hair);
   border:1px solid var(--hair); border-radius:12px; overflow:hidden; margin-bottom:20px}
 .kpi{background:var(--surface); padding:14px 16px 15px}
@@ -132,6 +142,7 @@ button, select, input{font:inherit; color:inherit}
 /* ---------- cartoes ---------- */
 .row{display:grid; gap:20px; margin-bottom:20px}
 .row.two{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); align-items:start}
+.row.two.solo{grid-template-columns:minmax(0,1fr)}
 .row.half{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (max-width:900px){.row.two,.row.half{grid-template-columns:minmax(0,1fr)}}
 .card{background:var(--surface); border:1px solid var(--hair); border-radius:12px; padding:18px 18px 14px;
@@ -157,6 +168,7 @@ details.tbl summary:hover{color:var(--ink)}
 table{border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums}
 th,td{padding:7px 10px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--hair-2)}
 th:first-child,td:first-child{text-align:left}
+th.txt,td.txt{text-align:left}
 thead th{position:sticky; top:0; background:var(--surface); z-index:2; font-family:Archivo,sans-serif; font-size:10.5px;
   font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--hair)}
 thead th.s{cursor:pointer; user-select:none}
@@ -265,11 +277,29 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
 </div>
 
 <div class="wrap">
+  <section class="card vazio" id="vazio" hidden>
+    <div class="eyebrow">SAP ZMMR270 · depósito 0002</div>
+    <h2>Carregue o export para começar</h2>
+    <p>Este painel abre vazio, sem nenhum dado dentro. Solte aqui o export do ZMMR270 em texto e ele
+      monta o modelo inteiro no seu navegador — o arquivo não sai da sua máquina.</p>
+    <label class="drop" id="drop-vazio">
+      <b>Escolher arquivo</b>
+      <span>ou arraste o .txt para cá</span>
+    </label>
+    <p class="status" id="status-vazio"></p>
+    <ul>
+      <li>Texto separado por <b>ponto e vírgula</b>, com a linha de cabeçalho do relatório.</li>
+      <li>Funciona com ou sem a coluna <code>MBLNR</code>, em UTF-8 ou ANSI.</li>
+      <li>A base carregada fica guardada neste navegador até você trocar ou limpar.</li>
+    </ul>
+  </section>
+
+  <div id="painel">
   <div class="chips" id="chips"></div>
   <div class="kpis" id="kpis"></div>
 
-  <div class="row two">
-    <section class="card">
+  <div class="row two" id="row-lojas">
+    <section class="card" id="card-lojas">
       <header>
         <div>
           <h2>Ranking de lojas</h2>
@@ -305,6 +335,19 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
 
   <section class="card" style="margin-bottom:20px">
     <header>
+      <div><h2>Itens com trocas lançadas</h2><p class="cap" id="cap-item"></p></div>
+      <div class="grp">
+        <span class="grp-label">Loja</span>
+        <select class="ctl" id="sel-loja" aria-label="Selecionar loja"></select>
+        <input type="search" class="tsearch" id="q-item" placeholder="Buscar item, código ou categoria"
+               aria-label="Buscar item">
+      </div>
+    </header>
+    <div class="tall scrollx"><table id="t-item"></table></div>
+  </section>
+
+  <section class="card" style="margin-bottom:20px">
+    <header>
       <div><h2>Evolução mensal</h2><p class="cap" id="cap-mes"></p></div>
       <div class="legend" id="leg-mes"></div>
     </header>
@@ -323,6 +366,8 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
     </section>
   </div>
 
+  </div><!-- /painel -->
+
   <footer>
     <h3>Como ler este painel</h3>
     <ul>
@@ -334,7 +379,7 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
         <code>VERPR_BRUTO_TOTAL</code> é idêntico ao líquido em 100% das linhas e por isso não aparece como medida separada.</li>
       <li><b>Atualizar dados</b> lê um novo export do ZMMR270 direto no seu navegador e refaz o painel
         inteiro — o arquivo não sai da sua máquina. A base carregada fica guardada neste navegador até
-        você trocar de novo ou clicar em "Restaurar a base publicada".</li>
+        você carregar outro export ou limpar pelo mesmo painel.</li>
       <li><b>Baixar planilha</b> exporta exatamente o recorte que está filtrado. O botão só aparece onde
         salvar arquivo é permitido: sempre na cópia local do painel (planilha .xlsx com uma aba por
         recorte, ou .csv avulso) e, na versão publicada, quando o visualizador libera o download.</li>
@@ -371,12 +416,13 @@ function carregarModelo(modelo){
   PROD.forEach((p,i)=>{ P_CAT[i]=p[3]; P_GRP[i]=gIx[CAT[p[3]][2]]; P_KG[i]= p[2]==="KG"?1:0; });
   // os filtros guardam índices, que mudam junto com a base
   S.m0=0; S.m1=MES.length-1; S.loja.clear(); S.grupo.clear(); S.cat.clear(); S.forn.clear();
-  S.busca=""; S.sort={k:"vn",d:-1};
+  S.busca=""; S.sort={k:"vn",d:-1}; S.buscaItem=""; S.sortItem={k:"qn",d:-1};
 }
 
 /* ---------- estado ---------- */
 const S={ m0:0, m1:0, loja:new Set(), grupo:new Set(), cat:new Set(), forn:new Set(),
-          un:"all", medida:"qtd", visao:"liq", nivel:"n3", sort:{k:"v",d:-1}, busca:"" };
+          un:"all", medida:"qtd", visao:"liq", nivel:"n3", sort:{k:"vn",d:-1}, busca:"",
+          sortItem:{k:"qn",d:-1}, buscaItem:"" };
 
 /* ---------- formatacao ---------- */
 const nf0=new Intl.NumberFormat("pt-BR",{maximumFractionDigits:0});
@@ -433,14 +479,18 @@ function passa(r){
 function calcular(){
   const aL=novoAgg(LOJA.length), aM=novoAgg(MES.length), aC=novoAgg(CAT.length),
         aG=novoAgg(GRUPO.length), aP=novoAgg(PROD.length), aF=novoAgg(FORN.length), T=novoAgg(1);
+  const pForn=new Int32Array(PROD.length).fill(-1);   // -1 nenhum, -2 vários
+  const pUlt=new Int32Array(PROD.length).fill(-1);    // último mês com lançamento
   let linhas=0;
   for(let k=0;k<F.length;k++){
     const r=F[k]; if(!passa(r)) continue;
     const p=r[2];
     soma(aL,r[0],r); soma(aM,r[1],r); soma(aC,P_CAT[p],r); soma(aG,P_GRP[p],r);
     soma(aP,p,r); soma(aF,r[3],r); soma(T,0,r); linhas++;
+    if(pForn[p]===-1) pForn[p]=r[3]; else if(pForn[p]!==r[3]) pForn[p]=-2;
+    if(r[1]>pUlt[p]) pUlt[p]=r[1];
   }
-  D={L:aL,M:aM,C:aC,G:aG,P:aP,Fo:aF,T:T,fato:linhas};
+  D={L:aL,M:aM,C:aC,G:aG,P:aP,Fo:aF,T:T,fato:linhas,pForn:pForn,pUlt:pUlt};
 }
 
 /* ---------- tooltip ---------- */
@@ -574,14 +624,18 @@ function rank(host,itens){
 }
 
 /* ---------- tabelas ---------- */
-function tabela(host,cols,linhas,tot){
+function tabela(host,cols,linhas,tot,est){
   host.textContent="";
+  const E=est||S.sort;
+  // alinhamento pelo tipo do dado: número à direita, texto à esquerda
+  const num=cols.map((c,i)=>!!(c.qtd||c.money)||(linhas.length>0&&typeof linhas[0][i]==="number"));
+  const alin=i=>num[i]?"":" txt";
   const thead=el("thead"), tr=el("tr");
-  cols.forEach(c=>{
-    const th=el("th",{class:c.k?"s":""}); th.appendChild(document.createTextNode(c.t));
+  cols.forEach((c,i)=>{
+    const th=el("th",{class:(c.k?"s":"")+alin(i)}); th.appendChild(document.createTextNode(c.t));
     if(c.k){ th.setAttribute("scope","col"); th.setAttribute("role","button"); th.tabIndex=0;
-      if(S.sort.k===c.k) th.appendChild(el("span",{class:"ar",text:S.sort.d<0?"▾":"▴"}));
-      const go=()=>{ if(S.sort.k===c.k) S.sort.d*=-1; else S.sort={k:c.k,d:-1}; desenhar(); };
+      if(E.k===c.k) th.appendChild(el("span",{class:"ar",text:E.d<0?"▾":"▴"}));
+      const go=()=>{ if(E.k===c.k) E.d*=-1; else { E.k=c.k; E.d=-1; } desenhar(); };
       th.addEventListener("click",go);
       th.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();go();} }); }
     tr.appendChild(th);
@@ -589,13 +643,13 @@ function tabela(host,cols,linhas,tot){
   thead.appendChild(tr); host.appendChild(thead);
   const tb=el("tbody");
   linhas.forEach(L=>{ const r=el("tr");
-    L.forEach((c,i)=>{ const td=el("td",{class:(cols[i].cls||"")+(typeof c==="number"&&c<0?" neg":"")});
+    L.forEach((c,i)=>{ const td=el("td",{class:(cols[i].cls||"")+alin(i)+(typeof c==="number"&&c<0?" neg":"")});
       td.textContent = typeof c==="number" ? (cols[i].money?fmtM(c):cols[i].qtd?fmtQ(c):nf0.format(c)) : c;
       r.appendChild(td); });
     tb.appendChild(r); });
   host.appendChild(tb);
   if(tot){ const tf=el("tfoot"), r=el("tr");
-    tot.forEach((c,i)=>{ const td=el("td",{class:(cols[i].cls||"")+(typeof c==="number"&&c<0?" neg":"")});
+    tot.forEach((c,i)=>{ const td=el("td",{class:(cols[i].cls||"")+alin(i)+(typeof c==="number"&&c<0?" neg":"")});
       td.style.fontWeight="600"; td.style.borderTop="1px solid var(--hair)";
       td.textContent = typeof c==="number" ? (cols[i].money?fmtM(c):cols[i].qtd?fmtQ(c):nf0.format(c)) : c;
       r.appendChild(td); });
@@ -613,6 +667,7 @@ function legenda(host,pares){ host.textContent="";
 /* ---------- desenho ---------- */
 const $=id=>document.getElementById(id);
 function desenhar(){
+  if(!D) return;
   const T=D.T, cIn=css("--in"), cOut=css("--out");
   const vq=[T.qi[0],T.qo[0]];
   const vv= S.medida==="csgm" ? [T.ci[0],T.co[0]] : [T.li[0],T.lo[0]];
@@ -655,6 +710,9 @@ function desenhar(){
       ["Lançamentos",nf0.format(d.n),""],["Loja",d.cd+" · "+d.uf,""]],
     click:()=>{ if(S.loja.has(d.ix)&&S.loja.size===1) S.loja.clear(); else { S.loja.clear(); S.loja.add(d.ix);} atualizar(); }
   }));
+  const soloLoja=lojas.length<=1;
+  $("card-lojas").hidden=soloLoja;
+  $("row-lojas").classList.toggle("solo",soloLoja);
   $("cap-loja").textContent=rotulo()+" — "+(topL.length<lojas.length?"15 maiores de "+nf0.format(lojas.length)+" lojas"
       :lojas.length===1?"1 loja":nf0.format(lojas.length)+" lojas")+" · "+unidade();
   hbar($("ch-loja"),topL,{sign:S.visao==="liq",click:d=>d.click(),labW:210});
@@ -702,6 +760,47 @@ function desenhar(){
      filtradas.reduce((s,d)=>s+d.q[0]-d.q[1],0),
      filtradas.reduce((s,d)=>s+d.m[0],0), filtradas.reduce((s,d)=>s+d.m[1],0),
      filtradas.reduce((s,d)=>s+d.m[0]-d.m[1],0)]);
+
+  /* itens com trocas lancadas */
+  const itens=[];
+  for(let i=0;i<PROD.length;i++){ if(!D.P.n[i]) continue;
+    const fi=D.pForn[i];
+    itens.push({cd:PROD[i][0],nm:PROD[i][1],un:PROD[i][2],
+      n3:GRUPO[P_GRP[i]][1], n4:CAT[P_CAT[i]][1],
+      forn: fi>=0?FORN[fi][1] : "vários fornecedores",
+      ult: D.pUlt[i]>=0?mesLongo(MES[D.pUlt[i]]):"",
+      ultIx: D.pUlt[i], n:D.P.n[i],
+      q:[D.P.qi[i],D.P.qo[i]],
+      m:S.medida==="csgm"?[D.P.ci[i],D.P.co[i]]:[D.P.li[i],D.P.lo[i]]}); }
+  const qi=S.buscaItem.trim().toLowerCase();
+  const itensF=itens.filter(d=>!qi||d.nm.toLowerCase().includes(qi)||d.cd.includes(qi)||
+    d.n4.toLowerCase().includes(qi)||d.n3.toLowerCase().includes(qi)||d.forn.toLowerCase().includes(qi));
+  const chaveI={cd:d=>d.cd,nm:d=>d.nm,un:d=>d.un,cat:d=>d.n3+" "+d.n4,forn:d=>d.forn,
+    ult:d=>d.ultIx,n:d=>d.n,qi:d=>d.q[0],qo:d=>d.q[1],qn:d=>d.q[0]-d.q[1],
+    vi:d=>d.m[0],vo:d=>d.m[1],vn:d=>d.m[0]-d.m[1]};
+  const kfi=chaveI[S.sortItem.k]||chaveI.qn;
+  itensF.sort((a,b)=>{ const x=kfi(a),y=kfi(b);
+    return (typeof x==="string"? x.localeCompare(y,"pt-BR") : x-y)*S.sortItem.d; });
+  const ondeLoja = S.loja.size===1 ? " em "+LOJA[[...S.loja][0]][1]
+    : S.loja.size>1 ? " nas "+S.loja.size+" lojas selecionadas" : " nas "+nf0.format(nLoja)+" lojas do filtro";
+  $("cap-item").textContent=(itensF.length===itens.length
+      ? nf0.format(itens.length)+(itens.length===1?" item":" itens")
+      : nf0.format(itensF.length)+" de "+nf0.format(itens.length)+" itens")+
+    " com troca lançada"+ondeLoja+" no período. Cada linha soma todos os lançamentos do item.";
+  const colsI=[{t:"Código",k:"cd",cls:"code"},{t:"Item",k:"nm",cls:"nm"},{t:"UM",k:"un"},
+    {t:"Últ. lanç.",k:"ult"},{t:"Lanç.",k:"n"},
+    {t:"Qtd entrada",k:"qi",qtd:1},{t:"Qtd saída",k:"qo",qtd:1},{t:"Qtd líquida",k:"qn",qtd:1},
+    {t:"R$ entrada",k:"vi",money:1},{t:"R$ saída",k:"vo",money:1},{t:"R$ resultado",k:"vn",money:1},
+    {t:"Hierarquia (3º › 4º)",k:"cat"},{t:"Fornecedor",k:"forn"}];
+  const som=f=>itensF.reduce((s,d)=>s+f(d),0);
+  tabela($("t-item"),colsI,
+    itensF.map(d=>[d.cd,d.nm,d.un,d.ult,d.n,d.q[0],d.q[1],d.q[0]-d.q[1],
+      d.m[0],d.m[1],d.m[0]-d.m[1],d.n3+" › "+d.n4,d.forn]),
+    ["","Total ("+nf0.format(itensF.length)+" itens)","","",
+      som(d=>d.n),som(d=>d.q[0]),som(d=>d.q[1]),som(d=>d.q[0]-d.q[1]),
+      som(d=>d.m[0]),som(d=>d.m[1]),som(d=>d.m[0]-d.m[1]),"",""],
+    S.sortItem);
+  sincronizarLoja();
 
   /* evolucao mensal */
   const meses=[];
@@ -751,7 +850,8 @@ function chips(){
   if(S.cat.size)   add("4º Nó", nomes(S.cat,CAT,1),()=>S.cat.clear());
   if(S.forn.size)  add("Fornecedor", nomes(S.forn,FORN,1),()=>S.forn.clear());
   if(S.un!=="all") add("Unidade", S.un, ()=>S.un="all");
-  if(S.busca)      add("Busca", S.busca, ()=>{S.busca="";$("q-loja").value="";});
+  if(S.busca)      add("Busca em lojas", S.busca, ()=>{S.busca="";$("q-loja").value="";});
+  if(S.buscaItem)  add("Busca em itens", S.buscaItem, ()=>{S.buscaItem="";$("q-item").value="";});
 }
 
 function atualizar(){ calcular(); desenhar(); sincronizar(); }
@@ -905,10 +1005,14 @@ function recorte(id){
     for(let i=0;i<FORN.length;i++) if(D.Fo.n[i]) r.push([FORN[i][0],FORN[i][1]].concat(medidas(D.Fo,i)));
     return T(["Código fornecedor","Fornecedor"],["t","t"],r); }
   if(id==="prod"){ const r=[];
-    for(let i=0;i<PROD.length;i++) if(D.P.n[i]) r.push([PROD[i][0],PROD[i][1],PROD[i][2],
-      GRUPO[P_GRP[i]][1],CAT[P_CAT[i]][1]].concat(medidas(D.P,i)));
-    return T(["Código material","Descrição","UM","Denominação 3º Nó","Denominação 4º Nó"],
-      ["t","t","t","t","t"],r); }
+    for(let i=0;i<PROD.length;i++){ if(!D.P.n[i]) continue;
+      const fi=D.pForn[i];
+      r.push([PROD[i][0],PROD[i][1],PROD[i][2],GRUPO[P_GRP[i]][1],CAT[P_CAT[i]][1],
+        fi>=0?FORN[fi][1]:"vários fornecedores",
+        D.pUlt[i]>=0?MES[D.pUlt[i]].slice(0,4)+"-"+MES[D.pUlt[i]].slice(4,6):""]
+        .concat(medidas(D.P,i))); }
+    return T(["Código material","Descrição","UM","Denominação 3º Nó","Denominação 4º Nó",
+      "Fornecedor","Último lançamento"],["t","t","t","t","t","t","t"],r); }
   if(id==="det"){ const r=[], r3=n=>Math.round(n*1000)/1000, r2=n=>Math.round(n*100)/100;
     for(let k=0;k<F.length;k++){ const x=F[k]; if(!passa(x)) continue;
       const p=x[2];
@@ -1144,7 +1248,8 @@ async function apagarBaseGuardada(){ const db=await bd(); return new Promise((re
 /* ================= troca de base ================= */
 let ORIGEM={tipo:"embutida",nome:"",quando:null};
 function textoOrigem(){
-  if(ORIGEM.tipo==="embutida") return "Base publicada com o painel.";
+  if(ORIGEM.tipo==="embutida")
+    return MODELO_ORIGINAL ? "Base publicada com o painel." : "Nenhuma base carregada.";
   return "Base carregada de "+ORIGEM.nome+" em "+
     new Date(ORIGEM.quando).toLocaleString("pt-BR")+
     (ORIGEM.guardada?" (guardada neste navegador).":" (só nesta sessão).");
@@ -1170,8 +1275,9 @@ async function usarArquivo(file,status){
 async function restaurarBase(status){
   try{ await apagarBaseGuardada(); }catch(e){}
   ORIGEM={tipo:"embutida",nome:"",quando:null};
-  aplicarModelo(MODELO_ORIGINAL);
-  status("Base original restaurada.");
+  if(MODELO_ORIGINAL){ aplicarModelo(MODELO_ORIGINAL); status("Base original restaurada."); }
+  else { mostrarVazio(true); $("status-vazio").textContent="";
+    status("Base removida. Carregue um novo export."); }
 }
 
 /* ================= painéis de base e download ================= */
@@ -1197,19 +1303,10 @@ function popSimples(btnId,montar){
     if(e.key==="Escape"&&pop.classList.contains("open")){ fechar(); btn.focus(); } });
 }
 
-function montarBase(pop){
-  pop.appendChild(el("h4",{text:"Atualizar a base"}));
-  pop.appendChild(el("p",{class:"hint",text:"Exporte o ZMMR270 como texto separado por ponto e vírgula e "+
-    "solte o arquivo aqui. O painel reconhece o layout com ou sem a coluna MBLNR, em UTF-8 ou ANSI, e "+
-    "refaz todos os cálculos no seu navegador — nada é enviado para fora."}));
-  const zona=el("label",{class:"drop"});
-  const inp=el("input",{type:"file",accept:".txt,.csv,.tsv,text/plain"});
-  inp.style.display="none";
-  zona.appendChild(el("b",{text:"Escolher arquivo"}));
-  zona.appendChild(el("span",{text:"ou arraste o .txt para cá"}));
-  zona.appendChild(inp);
-  const st=el("p",{class:"status",text:textoOrigem()});
-  const status=t=>{ st.textContent=t; };
+function zonaArquivo(zona,status){
+  let inp=zona.querySelector('input[type="file"]');
+  if(!inp){ inp=el("input",{type:"file",accept:".txt,.csv,.tsv,text/plain"});
+    inp.style.display="none"; zona.appendChild(inp); }
   inp.addEventListener("change",()=>{ if(inp.files&&inp.files[0]) usarArquivo(inp.files[0],status); });
   ["dragenter","dragover"].forEach(ev=>zona.addEventListener(ev,e=>{
     e.preventDefault(); zona.classList.add("on"); }));
@@ -1217,8 +1314,22 @@ function montarBase(pop){
     e.preventDefault(); zona.classList.remove("on"); }));
   zona.addEventListener("drop",e=>{ const f=e.dataTransfer&&e.dataTransfer.files[0];
     if(f) usarArquivo(f,status); });
+}
+
+function montarBase(pop){
+  pop.appendChild(el("h4",{text:"Atualizar a base"}));
+  pop.appendChild(el("p",{class:"hint",text:"Exporte o ZMMR270 como texto separado por ponto e vírgula e "+
+    "solte o arquivo aqui. O painel reconhece o layout com ou sem a coluna MBLNR, em UTF-8 ou ANSI, e "+
+    "refaz todos os cálculos no seu navegador — nada é enviado para fora."}));
+  const zona=el("label",{class:"drop"});
+  zona.appendChild(el("b",{text:"Escolher arquivo"}));
+  zona.appendChild(el("span",{text:"ou arraste o .txt para cá"}));
+  const st=el("p",{class:"status",text:textoOrigem()});
+  const status=t=>{ st.textContent=t; };
+  zonaArquivo(zona,status);
   pop.appendChild(zona); pop.appendChild(st);
-  const rest=el("button",{class:"linkbtn",type:"button",text:"Restaurar a base publicada"});
+  const rest=el("button",{class:"linkbtn",type:"button",
+    text: MODELO_ORIGINAL ? "Restaurar a base publicada" : "Limpar a base carregada"});
   rest.addEventListener("click",()=>restaurarBase(status));
   pop.appendChild(rest);
 }
@@ -1278,13 +1389,33 @@ function renderMeta(){
     " linhas do export agregadas em "+nf0.format(M.meta.linhas_fato)+
     " registros no grão loja × mês × produto × fornecedor. "+textoOrigem();
 }
+function popularLojas(){
+  const sel=$("sel-loja"); sel.textContent="";
+  sel.appendChild(el("option",{value:"-2",text:"(várias lojas)",hidden:"hidden"}));
+  sel.appendChild(el("option",{value:"-1",text:"Todas as lojas"}));
+  LOJA.forEach((l,i)=>sel.appendChild(el("option",{value:String(i),text:l[1]+" · "+l[0]+" · "+l[2]})));
+}
+function sincronizarLoja(){
+  const sel=$("sel-loja"); if(!sel.options.length) return;
+  const varias=sel.options[0];
+  if(S.loja.size>1){ varias.hidden=false; varias.textContent="("+S.loja.size+" lojas selecionadas)";
+    sel.value="-2"; }
+  else { varias.hidden=true; sel.value = S.loja.size===1 ? String([...S.loja][0]) : "-1"; }
+}
 function popularMeses(){
   ["m0","m1"].forEach(id=>{ const sel=$(id); sel.textContent="";
     MES.forEach((m,i)=>sel.appendChild(el("option",{value:String(i),text:mesLongo(m)}))); });
 }
+function mostrarVazio(v){
+  $("vazio").hidden=!v; $("painel").hidden=v;
+  document.querySelector(".bar").hidden=v;
+  if(v){ $("meta").textContent=""; D=null;
+    $("fonte").textContent="Nenhuma base carregada. Use o campo acima ou o botão Atualizar dados."; }
+}
 function aplicarModelo(modelo){
-  carregarModelo(modelo); renderMeta(); popularMeses();
+  carregarModelo(modelo); mostrarVazio(false); renderMeta(); popularMeses(); popularLojas();
   const q=$("q-loja"); if(q) q.value="";
+  const qi=$("q-item"); if(qi) qi.value="";
   atualizar();
 }
 
@@ -1307,9 +1438,14 @@ function iniciar(){
   seg("un","un","u"); seg("medida","medida","m"); seg("visao","visao","v"); seg("nivel","nivel","n");
 
   $("q-loja").addEventListener("input",e=>{ S.busca=e.target.value; desenhar(); });
+  $("q-item").addEventListener("input",e=>{ S.buscaItem=e.target.value; desenhar(); });
+  $("sel-loja").addEventListener("change",e=>{ const v=+e.target.value;
+    if(v===-2) return;
+    S.loja.clear(); if(v>=0) S.loja.add(v); atualizar(); });
   $("reset").addEventListener("click",()=>{ S.m0=0; S.m1=MES.length-1;
     S.loja.clear(); S.grupo.clear(); S.cat.clear(); S.forn.clear();
-    S.un="all"; S.busca=""; $("q-loja").value=""; atualizar(); });
+    S.un="all"; S.busca=""; $("q-loja").value="";
+    S.buscaItem=""; $("q-item").value=""; atualizar(); });
 
   let t=null;
   addEventListener("resize",()=>{ clearTimeout(t); t=setTimeout(desenhar,160); });
@@ -1319,7 +1455,8 @@ function iniciar(){
 
   popSimples("b-base",montarBase);
   popSimples("b-exp",montarExport);
-  aplicarModelo(MODELO_ORIGINAL);
+  zonaArquivo($("drop-vazio"),t=>{ $("status-vazio").textContent=t; });
+  if(MODELO_ORIGINAL) aplicarModelo(MODELO_ORIGINAL); else mostrarVazio(true);
 
   (async function(){
     await prepararDownloads();
