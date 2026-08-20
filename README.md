@@ -3,20 +3,19 @@
 Transforma o export bruto do relatório **ZMMR270** (depósito 0002 — Trocas/Avarias) em um
 modelo analítico navegável: quantidade e valor por **loja**, período, categoria, fornecedor e produto.
 
-O resultado é um painel HTML único, sem dependências externas, com os dados embutidos no próprio
-arquivo. São duas saídas do mesmo template:
+O resultado é um painel HTML único, sem dependências externas. São duas saídas do mesmo template:
 
 | Arquivo | Para quê |
 |---|---|
-| `dist/painel-trocas-avarias-offline.html` | documento HTML completo, para abrir direto do disco |
-| `dist/painel-trocas-avarias.html` | só o conteúdo da página, que o publicador de Artifact envolve no `<head>` dele |
+| `dist/painel-trocas-avarias-offline.html` | documento HTML completo e **vazio** (83 KB): abre pedindo o export e monta o modelo no navegador |
+| `dist/painel-trocas-avarias.html` | só o conteúdo da página, com a base embutida, para publicar como Artifact |
 
 ## Como regerar
 
 ```bash
 python3 scripts/build_model.py <export-ZMMR270.txt> data/model.json
 python3 scripts/build_dashboard.py data/model.json dashboard/template.html \
-  dist/painel-trocas-avarias-offline.html --standalone     # abre direto do disco
+  dist/painel-trocas-avarias-offline.html --standalone --sem-base   # arquivo vazio
 python3 scripts/build_dashboard.py data/model.json dashboard/template.html \
   dist/painel-trocas-avarias.html                          # para publicar como Artifact
 ```
@@ -74,10 +73,19 @@ ANSI, e localiza as colunas pelo cabeçalho.
 ```bash
 python3 scripts/build_model.py <novo-export.txt> data/model.json
 python3 scripts/build_dashboard.py data/model.json dashboard/template.html \
-  dist/painel-trocas-avarias-offline.html --standalone     # abre direto do disco
+  dist/painel-trocas-avarias-offline.html --standalone --sem-base   # arquivo vazio
 python3 scripts/build_dashboard.py data/model.json dashboard/template.html \
   dist/painel-trocas-avarias.html                          # para publicar como Artifact
 ```
+
+## Itens por loja
+
+O cartão **Itens com trocas lançadas** tem o próprio seletor de loja e lista *todos* os itens com
+lançamento nela — não um top N. Cada linha soma os lançamentos do item: última movimentação,
+quantidade de entrada, saída e líquida, os mesmos três em R$, hierarquia e fornecedor. Ordena por
+qualquer coluna, busca por descrição, código, categoria ou fornecedor, e fecha com o total, que bate
+com a linha da loja na tabela acima. O seletor é o filtro global de loja: mudá-lo reescreve o painel
+inteiro. Com uma única loja no recorte o ranking de lojas sai da tela — uma barra só não é gráfico.
 
 ## Exportar o recorte filtrado
 
