@@ -43,10 +43,11 @@ h1,h2,h3{font-family:Archivo, system-ui, sans-serif; margin:0; text-wrap:balance
 .wrap.head{padding-bottom:0}
 
 /* ---------- cabecalho ---------- */
-.top{padding:28px 0 18px; display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; justify-content:space-between}
+.top{padding:26px 0 16px; display:flex; flex-wrap:wrap; gap:14px 24px; align-items:baseline;
+  justify-content:space-between}
 .eyebrow{font-family:Archivo,sans-serif; font-size:11px; font-weight:600; letter-spacing:.14em;
   text-transform:uppercase; color:var(--muted)}
-h1{font-size:clamp(24px,3.4vw,34px); font-weight:700; margin-top:6px}
+h1{font-size:clamp(23px,3vw,30px); font-weight:700; margin-top:5px}
 .sub{color:var(--ink-2); margin-top:6px; max-width:62ch}
 .meta{display:flex; gap:0 10px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-2);
   align-items:baseline; max-width:60ch}
@@ -123,6 +124,12 @@ select.ctl{padding-right:8px; max-width:min(340px,100%)}
 .opt{display:grid; grid-template-columns:16px minmax(0,1fr) auto; gap:10px; align-items:start;
   padding:7px 8px; border-radius:7px; cursor:pointer}
 .opt:hover{background:var(--surface-2)}
+.opt-grp{display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:10px 8px 3px; font-family:Archivo,sans-serif; font-size:10.5px; font-weight:600;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+  border-top:1px solid var(--hair-2); margin-top:5px}
+.opt-grp:first-child{border-top:0; margin-top:0}
+.opt-grp button{font-size:11px; text-transform:none; letter-spacing:0; padding:2px 6px}
 .opt input{accent-color:var(--in); width:15px; height:15px; margin-top:2px}
 .opt .nm{min-width:0; font-size:13.5px; line-height:1.35; word-break:break-word}
 .opt .cd{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--muted); white-space:nowrap;
@@ -249,13 +256,19 @@ td.nm{white-space:normal; min-width:190px}
 
 /* ---------- rodape ---------- */
 footer{margin-top:30px; padding-top:18px; border-top:1px solid var(--hair); font-size:12px; color:var(--ink-2)}
-footer h3{font-size:12px; font-family:Archivo,sans-serif; letter-spacing:.08em; text-transform:uppercase;
-  color:var(--muted); margin-bottom:8px}
+footer summary{font-family:Archivo,sans-serif; font-size:12px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--muted); cursor:pointer; list-style:none;
+  display:inline-flex; gap:7px; align-items:center; padding:2px 0}
+footer summary::-webkit-details-marker{display:none}
+footer summary::before{content:"▸"; font-size:10px}
+footer details[open] summary::before{content:"▾"}
+footer summary:hover{color:var(--ink)}
+footer details[open] ul{margin-top:12px}
 footer ul{margin:0; padding-left:18px; display:grid; gap:5px; max-width:88ch}
 footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:var(--surface); padding:1px 5px;
   border-radius:4px; border:1px solid var(--hair-2)}
 .empty{padding:40px 0; text-align:center; color:var(--muted); font-size:13px}
-@media (max-width:760px){.bar{position:static}}
+@media (max-width:760px){.bar{position:static} .sep{display:none}}
 @media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important}}
 </style>
 
@@ -264,8 +277,6 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
     <div>
       <div class="eyebrow">SAP ZMMR270 · depósito 0002 — Trocas e Avarias</div>
       <h1>Trocas e Avarias por Loja</h1>
-      <p class="sub">Modelo analítico da movimentação de trocas: quantidade e valor de custo por loja,
-        período, categoria, fornecedor e produto. Todos os filtros valem para o painel inteiro.</p>
     </div>
     <div class="meta" id="meta"></div>
   </div>
@@ -287,14 +298,8 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
     <span class="sep"></span>
     <div class="grp">
       <button type="button" class="ctl" id="f-loja" aria-expanded="false">Lojas <span class="cnt"></span><span class="car">▾</span></button>
-      <button type="button" class="ctl" id="f-grupo" aria-expanded="false">3º Nó <span class="cnt"></span><span class="car">▾</span></button>
-      <button type="button" class="ctl" id="f-cat" aria-expanded="false">4º Nó <span class="cnt"></span><span class="car">▾</span></button>
+      <button type="button" class="ctl" id="f-cat" aria-expanded="false">Categoria <span class="cnt"></span><span class="car">▾</span></button>
       <button type="button" class="ctl" id="f-forn" aria-expanded="false">Fornecedor <span class="cnt"></span><span class="car">▾</span></button>
-      <div class="seg" id="un" role="group" aria-label="Unidade de medida">
-        <button type="button" data-u="all">UN+KG</button>
-        <button type="button" data-u="UN">UN</button>
-        <button type="button" data-u="KG">KG</button>
-      </div>
       <button type="button" class="linkbtn" id="reset">Limpar</button>
     </div>
     <div class="spacer"></div>
@@ -314,7 +319,7 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
     <span class="sep"></span>
     <div class="grp">
       <button type="button" class="ctl" id="b-base" aria-expanded="false">Atualizar dados <span class="car">▾</span></button>
-      <button type="button" class="acao" id="b-exp">Baixar filtro</button>
+      <button type="button" class="acao" id="b-exp" title="Baixa a base detalhada do recorte filtrado">Baixar base</button>
     </div>
   </div>
 </div>
@@ -341,46 +346,30 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
   <div class="chips" id="chips"></div>
   <div class="kpis" id="kpis"></div>
 
-  <div class="row two" id="row-lojas">
-    <section class="card" id="card-lojas">
-      <header>
-        <div>
-          <h2>Ranking de lojas</h2>
-          <p class="cap" id="cap-loja"></p>
-        </div>
-        <div class="legend" id="leg-loja"></div>
-      </header>
-      <div id="ch-loja"></div>
-      <p class="cap" style="margin-top:10px">Clique em uma barra para filtrar o painel por essa loja.</p>
-    </section>
-    <section class="card">
-      <header>
-        <div><h2>Hierarquia de mercadoria</h2><p class="cap" id="cap-cat"></p></div>
-        <div class="seg" id="nivel" role="group" aria-label="Nível da hierarquia">
-          <button type="button" data-n="n3">3º Nó</button>
-          <button type="button" data-n="n4">4º Nó</button>
-        </div>
-      </header>
-      <div id="ch-cat"></div>
-      <details class="tbl"><summary>Ver como tabela</summary>
-        <div class="mini scrollx"><table id="t-cat"></table></div></details>
-    </section>
-  </div>
-
-  <section class="card" style="margin-bottom:20px">
+  <section class="card" id="card-lojas">
     <header>
-      <div><h2>Quantidade e valor por loja</h2>
-        <p class="cap" id="cap-tab"></p></div>
-      <input type="search" class="tsearch" id="q-loja" placeholder="Buscar loja ou código" aria-label="Buscar loja">
+      <div><h2>Lojas</h2><p class="cap" id="cap-loja"></p></div>
+      <div class="grp">
+        <div class="legend" id="leg-loja"></div>
+        <div class="seg" id="aba-loja" role="group" aria-label="Como ver as lojas">
+          <button type="button" data-t="graf">Ranking</button>
+          <button type="button" data-t="tab">Tabela</button>
+        </div>
+        <input type="search" class="tsearch" id="q-loja" placeholder="Buscar loja ou código"
+               aria-label="Buscar loja" hidden>
+      </div>
     </header>
-    <div class="tall scrollx"><table id="t-loja"></table></div>
+    <div id="pane-loja-graf">
+      <div id="ch-loja"></div>
+      <p class="cap" style="margin-top:12px">Clique em uma barra para filtrar o painel por essa loja.</p>
+    </div>
+    <div id="pane-loja-tab" hidden><div class="tall scrollx"><table id="t-loja"></table></div></div>
   </section>
 
-  <section class="card" style="margin-bottom:20px">
+  <section class="card">
     <header>
       <div><h2>Itens com trocas lançadas</h2><p class="cap" id="cap-item"></p></div>
       <div class="grp">
-        <span class="grp-label">Loja</span>
         <select class="ctl" id="sel-loja" aria-label="Selecionar loja"></select>
         <input type="search" class="tsearch" id="q-item" placeholder="Buscar item, código ou categoria"
                aria-label="Buscar item">
@@ -389,19 +378,38 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
     <div class="tall scrollx"><table id="t-item"></table></div>
   </section>
 
-  <section class="card" style="margin-bottom:20px">
+  <section class="card">
     <header>
       <div><h2>Evolução mensal</h2><p class="cap" id="cap-mes"></p></div>
-      <div class="legend" id="leg-mes"></div>
+      <div class="grp">
+        <div class="legend" id="leg-mes"></div>
+        <div class="seg" id="aba-mes" role="group" aria-label="Como ver a evolução">
+          <button type="button" data-t="graf">Gráfico</button>
+          <button type="button" data-t="tab">Tabela</button>
+        </div>
+      </div>
     </header>
-    <div id="ch-mes"></div>
-    <details class="tbl"><summary>Ver como tabela</summary><div class="mini scrollx"><table id="t-mes"></table></div></details>
+    <div id="pane-mes-graf"><div id="ch-mes"></div></div>
+    <div id="pane-mes-tab" hidden><div class="mini scrollx"><table id="t-mes"></table></div></div>
   </section>
 
-  <div class="row half">
+  <div class="row two">
     <section class="card">
-      <header><div><h2>Produtos</h2><p class="cap" id="cap-prod"></p></div></header>
-      <div class="rank" id="r-prod"></div>
+      <header>
+        <div><h2>Hierarquia de mercadoria</h2><p class="cap" id="cap-cat"></p></div>
+        <div class="grp">
+          <div class="seg" id="nivel" role="group" aria-label="Nível da hierarquia">
+            <button type="button" data-n="n3">3º Nó</button>
+            <button type="button" data-n="n4">4º Nó</button>
+          </div>
+          <div class="seg" id="aba-cat" role="group" aria-label="Como ver a hierarquia">
+            <button type="button" data-t="graf">Gráfico</button>
+            <button type="button" data-t="tab">Tabela</button>
+          </div>
+        </div>
+      </header>
+      <div id="pane-cat-graf"><div id="ch-cat"></div></div>
+      <div id="pane-cat-tab" hidden><div class="mini scrollx"><table id="t-cat"></table></div></div>
     </section>
     <section class="card">
       <header><div><h2>Fornecedores</h2><p class="cap" id="cap-forn"></p></div></header>
@@ -409,11 +417,10 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
     </section>
   </div>
 
-  </div><!-- /painel -->
-
   <footer>
-    <h3>Como ler este painel</h3>
-    <ul>
+    <details>
+      <summary>Como ler este painel</summary>
+      <ul>
       <li><b>Entradas (+)</b> são os lançamentos com quantidade positiva no depósito de trocas e
         <b>saídas (−)</b> os de quantidade negativa. <b>Líquido</b> = entradas − saídas;
         <b>movimentação</b> = entradas + saídas (volume total tratado, independente do sinal).</li>
@@ -430,12 +437,14 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
         (<code>HIERNODE3</code>, 7 nós — PERECIVEIS, MERCEARIA ALIMENTO, BAZAR…) e
         <b>Denominação 4º Nó</b> (<code>HIERNODE4</code>, 28 nós dentro do 3º). Os filtros e o
         cartão de hierarquia usam a denominação, com o código ao lado.</li>
-      <li>A quantidade mistura unidades <b>UN</b> e <b>KG</b>. Para um total homogêneo, use o filtro de unidade.</li>
+      <li>A quantidade mistura unidades <b>UN</b> e <b>KG</b> — 96.221 e 9.797 linhas. A coluna <b>UM</b>
+        na tabela de itens e no arquivo baixado permite separar quando isso importa.</li>
       <li>O período vem de <code>CPUDT_MKPF</code> (data de lançamento do documento). O ano do documento
         (<code>MJAHR</code>) pode divergir e não é usado como período.</li>
       <li>A coluna <code>MBLNR</code> (nº do documento) não veio preenchida no export, então linhas idênticas
         de documentos diferentes são todas mantidas — nada é deduplicado.</li>
-    </ul>
+      </ul>
+    </details>
     <p style="margin-top:14px" id="fonte"></p>
   </footer>
 </div>
@@ -450,22 +459,22 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
 const MODELO_ORIGINAL = JSON.parse(document.getElementById("model").textContent);
 const MESN=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
 // F: [loja, mes, prod, forn, n, qi, qo, li, lo, ci, co]
-let M, F, LOJA, CAT, FORN, PROD, MES, GRUPO, gIx, P_CAT, P_GRP, P_KG;
+let M, F, LOJA, CAT, FORN, PROD, MES, GRUPO, gIx, P_CAT, P_GRP;
 
 function carregarModelo(modelo){
   M=modelo; F=M.fato; LOJA=M.lojas; CAT=M.cats; FORN=M.forn; PROD=M.prod; MES=M.meses;
   GRUPO=[]; gIx={};
   CAT.forEach(c=>{ if(!(c[2] in gIx)){ gIx[c[2]]=GRUPO.length; GRUPO.push([c[2],c[3]]); } });
-  P_CAT=new Int16Array(PROD.length); P_GRP=new Int16Array(PROD.length); P_KG=new Uint8Array(PROD.length);
-  PROD.forEach((p,i)=>{ P_CAT[i]=p[3]; P_GRP[i]=gIx[CAT[p[3]][2]]; P_KG[i]= p[2]==="KG"?1:0; });
+  P_CAT=new Int16Array(PROD.length); P_GRP=new Int16Array(PROD.length);
+  PROD.forEach((p,i)=>{ P_CAT[i]=p[3]; P_GRP[i]=gIx[CAT[p[3]][2]]; });
   // os filtros guardam índices, que mudam junto com a base
-  S.m0=0; S.m1=MES.length-1; S.loja.clear(); S.grupo.clear(); S.cat.clear(); S.forn.clear();
+  S.m0=0; S.m1=MES.length-1; S.loja.clear(); S.cat.clear(); S.forn.clear();
   S.busca=""; S.sort={k:"vn",d:-1}; S.buscaItem=""; S.sortItem={k:"qn",d:-1};
 }
 
 /* ---------- estado ---------- */
-const S={ m0:0, m1:0, loja:new Set(), grupo:new Set(), cat:new Set(), forn:new Set(),
-          un:"all", medida:"qtd", visao:"liq", nivel:"n3", sort:{k:"vn",d:-1}, busca:"",
+const S={ m0:0, m1:0, loja:new Set(), cat:new Set(), forn:new Set(),
+          medida:"qtd", visao:"liq", nivel:"n3", sort:{k:"vn",d:-1}, busca:"",
           sortItem:{k:"qn",d:-1}, buscaItem:"" };
 
 /* ---------- formatacao ---------- */
@@ -512,10 +521,7 @@ function passa(r){
   if(m<S.m0||m>S.m1) return false;
   if(S.loja.size&&!S.loja.has(r[0])) return false;
   if(S.forn.size&&!S.forn.has(r[3])) return false;
-  const p=r[2];
-  if(S.cat.size&&!S.cat.has(P_CAT[p])) return false;
-  if(S.grupo.size&&!S.grupo.has(P_GRP[p])) return false;
-  if(S.un!=="all" && (S.un==="KG") !== (P_KG[p]===1)) return false;
+  if(S.cat.size&&!S.cat.has(P_CAT[r[2]])) return false;
   return true;
 }
 function calcular(){
@@ -559,6 +565,7 @@ document.addEventListener("scroll",semTip,true);
 
 /* ---------- barras horizontais (lojas, categorias) ---------- */
 function hbar(host,itens,opt){
+  if(!host.clientWidth) return;          // painel escondido: desenha quando aparecer
   host.textContent="";
   if(!itens.length){ host.appendChild(el("p",{class:"empty",text:"Sem lançamentos para os filtros atuais."})); return; }
   const W=Math.max(300,host.clientWidth), rowH=opt.rowH||30, barH=13, padB=26;
@@ -600,6 +607,7 @@ function hbar(host,itens,opt){
 
 /* ---------- colunas mensais ---------- */
 function colunas(host,dados){
+  if(!host.clientWidth) return;          // painel escondido: desenha quando aparecer
   host.textContent="";
   if(!dados.length){ host.appendChild(el("p",{class:"empty",text:"Sem lançamentos no período filtrado."})); return; }
   const W=Math.max(320,host.clientWidth), padT=14, padB=30, padL=52, H=278, plotH=H-padT-padB;
@@ -698,6 +706,21 @@ function tabela(host,cols,linhas,tot,est){
     tf.appendChild(r); host.appendChild(tf); }
 }
 
+/* ---------- abas dentro dos cartoes ---------- */
+const ABAS={};
+function abas(id,painel,inicial){
+  ABAS[id]=inicial;
+  $(id).querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    ABAS[id]=b.dataset.t; pintarAbas(id,painel); }));
+  pintarAbas(id,painel);
+}
+function pintarAbas(id,painel){
+  const at=ABAS[id];
+  $(id).querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.t===at)));
+  Object.keys(painel).forEach(k=>{ const e=$(painel[k]); if(e) e.hidden = k!==at; });
+  desenhar();
+}
+
 /* ---------- rotulos ---------- */
 const NM_MED={qtd:"Quantidade",liq:"Valor (R$)"};
 const NM_VIS={liq:"resultado (entradas − saídas)",in:"entradas (+)",out:"saídas (−)",tot:"movimentação (entradas + saídas)"};
@@ -750,13 +773,20 @@ function desenhar(){
       ["Lançamentos",nf0.format(d.n),""],["Loja",d.cd+" · "+d.uf,""]],
     click:()=>{ if(S.loja.has(d.ix)&&S.loja.size===1) S.loja.clear(); else { S.loja.clear(); S.loja.add(d.ix);} atualizar(); }
   }));
+  // com uma loja só, o ranking vira uma barra sozinha: mostra direto a tabela
   const soloLoja=lojas.length<=1;
-  $("card-lojas").hidden=soloLoja;
-  $("row-lojas").classList.toggle("solo",soloLoja);
-  $("cap-loja").textContent=rotulo()+" — "+(topL.length<lojas.length?"15 maiores de "+nf0.format(lojas.length)+" lojas"
+  $("aba-loja").hidden=soloLoja;
+  if(soloLoja&&ABAS["aba-loja"]==="graf"){ ABAS["aba-loja"]="tab";
+    $("pane-loja-graf").hidden=true; $("pane-loja-tab").hidden=false; }
+  $("q-loja").hidden = ABAS["aba-loja"]!=="tab";
+  $("cap-loja").textContent = ABAS["aba-loja"]==="tab"
+    ? "Entradas, saídas e resultado de cada loja no período filtrado, em quantidade e em reais. "+
+      "Clique nos títulos das colunas para ordenar."
+    : rotulo()+" — "+(topL.length<lojas.length?"15 maiores de "+nf0.format(lojas.length)+" lojas"
       :lojas.length===1?"1 loja":nf0.format(lojas.length)+" lojas")+" · "+unidade();
   hbar($("ch-loja"),topL,{sign:S.visao==="liq",click:d=>d.click(),labW:210});
-  legenda($("leg-loja"), S.visao==="liq"?[["Líquido positivo",cIn],["Líquido negativo",cOut]]:[]);
+  legenda($("leg-loja"), (ABAS["aba-loja"]==="graf"&&S.visao==="liq")
+    ?[["Líquido positivo",cIn],["Líquido negativo",cOut]]:[]);
 
   /* hierarquia de mercadoria: 3º nó (HIERNODE3) ou 4º nó (HIERNODE4) */
   const n3=S.nivel==="n3", AH=n3?D.G:D.C, DIM=n3?GRUPO:CAT, NIVEL=n3?"3º Nó":"4º Nó";
@@ -781,8 +811,6 @@ function desenhar(){
     cats.map(d=>[d.cd,d.nm,d.n,d.q[0],d.q[1],d.q[0]-d.q[1],d.m[0],d.m[1],d.m[0]-d.m[1]]));
 
   /* tabela por loja */
-  $("cap-tab").textContent="Entradas, saídas e resultado de cada loja no período filtrado. "+
-    "Valores em custo líquido (R$). Clique nos títulos das colunas para ordenar.";
   const q=S.busca.trim().toLowerCase();
   const filtradas=lojas.filter(d=>!q||d.nm.toLowerCase().includes(q)||d.cd.includes(q));
   const chave={cd:d=>d.cd,nm:d=>d.nm,uf:d=>d.uf,n:d=>d.n,qi:d=>d.q[0],qo:d=>d.q[1],qn:d=>d.q[0]-d.q[1],
@@ -855,19 +883,13 @@ function desenhar(){
     {t:"R$ entrada",money:1},{t:"R$ saída",money:1},{t:"R$ resultado",money:1}],
     meses.map(d=>[mesLongo(d.ym),d.n,d.q[0],d.q[1],d.q[0]-d.q[1],d.m[0],d.m[1],d.m[0]-d.m[1]]));
 
-  /* produtos e fornecedores */
-  const prods=[];
-  for(let i=0;i<PROD.length;i++){ if(!D.P.n[i]) continue;
-    prods.push({nm:PROD[i][1],sub:PROD[i][0]+" · "+PROD[i][2]+" · "+GRUPO[P_GRP[i]][1]+" › "+CAT[P_CAT[i]][1],
-      v:val(D.P,i)}); }
-  prods.sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
-  $("cap-prod").textContent=rotulo()+" — 15 maiores de "+nf0.format(prods.length)+" itens · "+unidade();
-  rank($("r-prod"),prods.slice(0,15));
+  /* fornecedores */
   const forns=[];
   for(let i=0;i<FORN.length;i++){ if(!D.Fo.n[i]) continue;
     forns.push({nm:FORN[i][1],sub:FORN[i][0],v:val(D.Fo,i)}); }
   forns.sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
-  $("cap-forn").textContent=rotulo()+" — 15 maiores de "+nf0.format(forns.length)+" fornecedores · "+unidade();
+  $("cap-forn").textContent=rotulo()+" — "+(forns.length>15?"15 maiores de "+nf0.format(forns.length)
+    :nf0.format(forns.length)+(forns.length===1?" fornecedor":" fornecedores"))+" · "+unidade();
   rank($("r-forn"),forns.slice(0,15));
 
   chips();
@@ -885,10 +907,8 @@ function chips(){
     add("Período", mesLongo(MES[S.m0])+" – "+mesLongo(MES[S.m1]), ()=>{S.m0=0;S.m1=MES.length-1;});
   const nomes=(set,arr,ix)=>[...set].slice(0,2).map(i=>arr[i][ix]).join(", ")+(set.size>2?" +"+(set.size-2):"");
   if(S.loja.size)  add("Lojas", nomes(S.loja,LOJA,1),  ()=>S.loja.clear());
-  if(S.grupo.size) add("3º Nó", nomes(S.grupo,GRUPO,1),()=>S.grupo.clear());
-  if(S.cat.size)   add("4º Nó", nomes(S.cat,CAT,1),()=>S.cat.clear());
+  if(S.cat.size)   add("Categoria", nomes(S.cat,CAT,1),()=>S.cat.clear());
   if(S.forn.size)  add("Fornecedor", nomes(S.forn,FORN,1),()=>S.forn.clear());
-  if(S.un!=="all") add("Unidade", S.un, ()=>S.un="all");
   if(S.busca)      add("Busca em lojas", S.busca, ()=>{S.busca="";$("q-loja").value="";});
   if(S.buscaItem)  add("Busca em itens", S.buscaItem, ()=>{S.buscaItem="";$("q-item").value="";});
 }
@@ -920,13 +940,24 @@ function multi(btnId,titulo,itens,set,largo){
   function visiveis(){
     const q=(campo&&campo.value||"").trim().toLowerCase();
     return itens().filter(it=>!q||it.nm.toLowerCase().includes(q)||
-      String(it.cd).toLowerCase().includes(q));
+      String(it.cd).toLowerCase().includes(q)||(it.gr||"").toLowerCase().includes(q));
   }
   function pintar(){
     const vis=visiveis(), total=itens().length;
     lista.textContent="";
     if(!vis.length) lista.appendChild(el("p",{class:"empty",text:"Nada encontrado."}));
+    let grAtual=null;
     vis.slice(0,600).forEach(it=>{
+      if(it.gr && it.gr!==grAtual){ grAtual=it.gr;
+        const h=el("div",{class:"opt-grp"});
+        h.appendChild(el("span",{text:it.gr}));
+        const bg=el("button",{class:"linkbtn",type:"button",text:"marcar grupo"});
+        bg.addEventListener("click",()=>{
+          const doGrupo=itens().filter(x=>x.gr===it.gr);
+          const todos=doGrupo.every(x=>set.has(x.v));
+          doGrupo.forEach(x=>todos?set.delete(x.v):set.add(x.v));
+          pintar(); atualizar(); });
+        h.appendChild(bg); lista.appendChild(h); }
       const lb=el("label",{class:"opt"}), cb=el("input",{type:"checkbox"});
       cb.checked=set.has(it.v);
       cb.addEventListener("change",()=>{ cb.checked?set.add(it.v):set.delete(it.v);
@@ -1087,66 +1118,19 @@ const COLS_MED=["Lançamentos","Qtd entrada","Qtd saída","Qtd líquida",
   "R$ entrada","R$ saída","R$ resultado"];
 const TIPOS_MED=["n","q","q","q","m","m","m"];
 
-function recorte(id){
-  const T=(cols,tipos,rows)=>({cols:cols.concat(COLS_MED),tipos:tipos.concat(TIPOS_MED),rows:rows});
-  if(id==="loja"){ const r=[];
-    for(let i=0;i<LOJA.length;i++) if(D.L.n[i]) r.push([LOJA[i][0],LOJA[i][1],LOJA[i][2]].concat(medidas(D.L,i)));
-    return T(["Código","Loja","UF"],["t","t","t"],r); }
-  if(id==="mes"){ const r=[];
-    for(let i=S.m0;i<=S.m1;i++) if(D.M.n[i])
-      r.push([MES[i].slice(0,4)+"-"+MES[i].slice(4,6),mesLongo(MES[i])].concat(medidas(D.M,i)));
-    return T(["Mês","Mês (texto)"],["t","t"],r); }
-  if(id==="n3"){ const r=[];
-    for(let i=0;i<GRUPO.length;i++) if(D.G.n[i]) r.push([GRUPO[i][0],GRUPO[i][1]].concat(medidas(D.G,i)));
-    return T(["Código 3º Nó","Denominação 3º Nó"],["t","t"],r); }
-  if(id==="n4"){ const r=[];
-    for(let i=0;i<CAT.length;i++) if(D.C.n[i])
-      r.push([CAT[i][0],CAT[i][1],CAT[i][2],CAT[i][3]].concat(medidas(D.C,i)));
-    return T(["Código 4º Nó","Denominação 4º Nó","Código 3º Nó","Denominação 3º Nó"],["t","t","t","t"],r); }
-  if(id==="forn"){ const r=[];
-    for(let i=0;i<FORN.length;i++) if(D.Fo.n[i]) r.push([FORN[i][0],FORN[i][1]].concat(medidas(D.Fo,i)));
-    return T(["Código fornecedor","Fornecedor"],["t","t"],r); }
-  if(id==="prod"){ const r=[];
-    for(let i=0;i<PROD.length;i++){ if(!D.P.n[i]) continue;
-      const fi=D.pForn[i];
-      r.push([PROD[i][0],PROD[i][1],PROD[i][2],GRUPO[P_GRP[i]][1],CAT[P_CAT[i]][1],
-        fi>=0?FORN[fi][1]:"vários fornecedores",
-        D.pUlt[i]>=0?MES[D.pUlt[i]].slice(0,4)+"-"+MES[D.pUlt[i]].slice(4,6):""]
-        .concat(medidas(D.P,i))); }
-    return T(["Código material","Descrição","UM","Denominação 3º Nó","Denominação 4º Nó",
-      "Fornecedor","Último lançamento"],["t","t","t","t","t","t","t"],r); }
-  if(id==="det"){ const r=[], r3=n=>Math.round(n*1000)/1000, r2=n=>Math.round(n*100)/100;
-    for(let k=0;k<F.length;k++){ const x=F[k]; if(!passa(x)) continue;
-      const p=x[2];
-      r.push([LOJA[x[0]][0],LOJA[x[0]][1],LOJA[x[0]][2],MES[x[1]].slice(0,4)+"-"+MES[x[1]].slice(4,6),
-        PROD[p][0],PROD[p][1],PROD[p][2],GRUPO[P_GRP[p]][1],CAT[P_CAT[p]][1],
-        FORN[x[3]][0],FORN[x[3]][1],
-        x[4],r3(x[5]),r3(x[6]),r3(x[5]-x[6]),r2(x[7]),r2(x[8]),r2(x[7]-x[8])]); }
-    return T(["Código loja","Loja","UF","Mês","Código material","Descrição","UM",
-      "Denominação 3º Nó","Denominação 4º Nó","Código fornecedor","Fornecedor"],
-      ["t","t","t","t","t","t","t","t","t","t","t"],r); }
-  if(id==="filtros"){ const at=[];
-    const lista=(set,arr,i)=>set.size?[...set].map(k=>arr[k][i]).join(", "):"(todas)";
-    at.push(["Período",mesLongo(MES[S.m0])+" a "+mesLongo(MES[S.m1])]);
-    at.push(["Lojas",lista(S.loja,LOJA,1)]);
-    at.push(["Denominação 3º Nó",lista(S.grupo,GRUPO,1)]);
-    at.push(["Denominação 4º Nó",lista(S.cat,CAT,1)]);
-    at.push(["Fornecedores",lista(S.forn,FORN,1)]);
-    at.push(["Unidade",S.un==="all"?"UN + KG":S.un]);
-    at.push(["Busca na tabela de lojas",S.busca||"(nenhuma)"]);
-    at.push(["",""]);
-    const m=medidas(D.T,0);
-    COLS_MED.forEach((c,i)=>at.push([c,m[i]]));
-    at.push(["",""]);
-    at.push(["Fonte",M.meta.fonte]);
-    at.push(["Linhas do export",M.meta.linhas_origem]);
-    at.push(["Gerado em",new Date().toLocaleString("pt-BR")]);
-    return {cols:["Item","Valor"],tipos:["t","x"],rows:at}; }
-  throw new Error("recorte desconhecido: "+id);
+// Uma só saída: a base detalhada do recorte filtrado, no grão do modelo.
+function baseDetalhada(){
+  const r=[], r3=n=>Math.round(n*1000)/1000, r2=n=>Math.round(n*100)/100;
+  for(let k=0;k<F.length;k++){ const x=F[k]; if(!passa(x)) continue;
+    const p=x[2];
+    r.push([LOJA[x[0]][0],LOJA[x[0]][1],LOJA[x[0]][2],MES[x[1]].slice(0,4)+"-"+MES[x[1]].slice(4,6),
+      PROD[p][0],PROD[p][1],PROD[p][2],GRUPO[P_GRP[p]][1],CAT[P_CAT[p]][1],
+      FORN[x[3]][0],FORN[x[3]][1],
+      x[4],r3(x[5]),r3(x[6]),r3(x[5]-x[6]),r2(x[7]),r2(x[8]),r2(x[7]-x[8])]); }
+  return {cols:["Código loja","Loja","UF","Mês","Código material","Descrição","UM",
+      "Denominação 3º Nó","Denominação 4º Nó","Código fornecedor","Fornecedor"].concat(COLS_MED),
+    tipos:["t","t","t","t","t","t","t","t","t","t","t"].concat(TIPOS_MED), rows:r};
 }
-const RECORTES=[["filtros","Filtros e totais"],["loja","Por loja"],["mes","Por mês"],
-  ["n3","Por 3º Nó"],["n4","Por 4º Nó"],["forn","Por fornecedor"],["prod","Por produto"],
-  ["det","Base detalhada do filtro"]];
 
 /* ================= CSV ================= */
 function paraCSV(t){
@@ -1283,7 +1267,7 @@ async function prepararDownloads(){
   MODO = DL ? "cap" : (EMBUTIDO ? "nenhum" : "blob");
   const b=$("b-exp");
   if(b){ b.hidden=(MODO==="nenhum");
-    b.textContent = MODO==="cap" ? "Baixar filtro (.csv)" : "Baixar filtro (.xlsx)"; }
+    b.textContent = MODO==="cap" ? "Baixar base (.csv)" : "Baixar base (.xlsx)"; }
 }
 let toastT=null;
 function toast(txt){
@@ -1294,7 +1278,7 @@ function toast(txt){
 async function baixarFiltro(){
   const b=$("b-exp"); if(b.disabled) return;
   const rot=b.textContent; b.disabled=true; b.textContent="Gerando…";
-  try{ await exportar(MODO==="cap" ? "det" : "xlsx", toast); }
+  try{ await exportar(toast); }
   finally{ b.disabled=false; b.textContent=rot; }
 }
 function baixarBlob(nome,dados,mime){
@@ -1324,23 +1308,21 @@ async function entregar(nome,dados,mime,status,permitirTxt){
 }
 function sufixo(){
   const d=new Date(), p=n=>String(n).padStart(2,"0");
-  const filtrado=(S.loja.size||S.grupo.size||S.cat.size||S.forn.size||S.un!=="all"||
+  const filtrado=(S.loja.size||S.cat.size||S.forn.size||
     S.m0!==0||S.m1!==MES.length-1)?"-filtrado":"";
   return filtrado+"-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate());
 }
-async function exportar(id,status){
-  status("Gerando…");
+async function exportar(status){
+  status("Montando o arquivo…");
   await new Promise(r=>setTimeout(r,20));
   try{
-    if(id==="xlsx"){
-      const abas=RECORTES.map(r=>({nome:r[1].slice(0,31),tab:recorte(r[0])}));
-      return await entregar("trocas-avarias"+sufixo()+".xlsx",await paraXLSX(abas),
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",status,false);
-    }
-    const nome=(RECORTES.find(r=>r[0]===id)||["",id])[1];
-    const arq="trocas-"+nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-      .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+sufixo()+".csv";
-    return await entregar(arq,paraCSV(recorte(id)),"text/csv;charset=utf-8",status,true);
+    const tab=baseDetalhada();
+    if(!tab.rows.length){ status("O filtro atual não tem nenhum lançamento."); return false; }
+    const nome="trocas-base-detalhada"+sufixo();
+    if(MODO==="cap")
+      return await entregar(nome+".csv",paraCSV(tab),"text/csv;charset=utf-8",status,true);
+    return await entregar(nome+".xlsx",await paraXLSX([{nome:"Base detalhada",tab:tab}]),
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",status,false);
   }catch(e){ status("Erro ao gerar: "+e.message); return false; }
 }
 
@@ -1466,7 +1448,6 @@ function seg(id,campo,attr,depois){
 }
 function sincronizar(){
   $("m0").value=String(S.m0); $("m1").value=String(S.m1);
-  $("un").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.u===S.un)));
   $("medida").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.m===S.medida)));
   $("visao").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===S.visao)));
   $("nivel").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.n===S.nivel)));
@@ -1529,11 +1510,13 @@ function iniciar(){
 
   /* filtros */
   contadores.push(multi("f-loja","Lojas",()=>LOJA.map((l,i)=>({v:i,nm:l[1],cd:l[0]+" · "+l[2]})),S.loja,true));
-  contadores.push(multi("f-grupo","Denominação 3º Nó",()=>GRUPO.map((g,i)=>({v:i,nm:g[1],cd:g[0]})),S.grupo));
-  contadores.push(multi("f-cat","Denominação 4º Nó",()=>CAT.map((c,i)=>({v:i,nm:c[1],cd:c[0]}))
-    .filter(it=>!S.grupo.size||S.grupo.has(gIx[CAT[it.v][2]])),S.cat));
+  contadores.push(multi("f-cat","Categorias",()=>CAT.map((c,i)=>({v:i,nm:c[1],cd:c[0],gr:c[3]}))
+    .sort((a,b)=>a.gr.localeCompare(b.gr,"pt-BR")||a.nm.localeCompare(b.nm,"pt-BR")),S.cat,true));
   contadores.push(multi("f-forn","Fornecedores",()=>FORN.map((f,i)=>({v:i,nm:f[1],cd:f[0]})),S.forn,true));
-  seg("un","un","u"); seg("medida","medida","m"); seg("visao","visao","v"); seg("nivel","nivel","n");
+  seg("medida","medida","m"); seg("visao","visao","v"); seg("nivel","nivel","n");
+  abas("aba-loja",{graf:"pane-loja-graf",tab:"pane-loja-tab"},"graf");
+  abas("aba-mes", {graf:"pane-mes-graf", tab:"pane-mes-tab"}, "graf");
+  abas("aba-cat", {graf:"pane-cat-graf", tab:"pane-cat-tab"}, "graf");
 
   $("q-loja").addEventListener("input",e=>{ S.busca=e.target.value; desenhar(); });
   $("q-item").addEventListener("input",e=>{ S.buscaItem=e.target.value; desenhar(); });
@@ -1541,8 +1524,8 @@ function iniciar(){
     if(v===-2) return;
     S.loja.clear(); if(v>=0) S.loja.add(v); atualizar(); });
   $("reset").addEventListener("click",()=>{ S.m0=0; S.m1=MES.length-1;
-    S.loja.clear(); S.grupo.clear(); S.cat.clear(); S.forn.clear();
-    S.un="all"; S.busca=""; $("q-loja").value="";
+    S.loja.clear(); S.cat.clear(); S.forn.clear();
+    S.busca=""; $("q-loja").value="";
     S.buscaItem=""; $("q-item").value=""; atualizar(); });
 
   let t=null;

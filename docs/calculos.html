@@ -199,10 +199,9 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
       <tbody>
         <tr><td>Período</td><td class="f">mês inicial ≤ mês ≤ mês final</td><td>mês do lançamento, inclusive nas pontas</td></tr>
         <tr><td>Lojas</td><td class="f">loja ∈ selecionadas</td><td>a loja do registro</td></tr>
-        <tr><td>3º Nó</td><td class="f">setor do produto ∈ selecionados</td><td>via cadastro do material</td></tr>
-        <tr><td>4º Nó</td><td class="f">categoria do produto ∈ selecionadas</td><td>via cadastro do material</td></tr>
+        <tr><td>Categoria</td><td class="f">categoria (4º nó) do produto ∈ selecionadas</td>
+          <td>via cadastro do material; marcar um grupo equivale a marcar os 4º nós dele</td></tr>
         <tr><td>Fornecedor</td><td class="f">fornecedor ∈ selecionados</td><td>o fornecedor do registro</td></tr>
-        <tr><td>Unidade</td><td class="f">UM do produto = UN ou KG</td><td>via cadastro do material</td></tr>
       </tbody>
     </table></div>
     <p class="nota">As duas caixas de busca (na tabela de lojas e na de itens) não são filtros do painel:
@@ -319,12 +318,13 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
       </tbody>
     </table></div>
 
-    <h3>Planilha exportada</h3>
-    <p><b>Baixar filtro</b> é um clique só: gera a pasta com o recorte que está na tela naquele momento.
-      Toda aba traz as <b>sete medidas</b>, independentes da medida e da visão selecionadas:
+    <h3>Arquivo baixado</h3>
+    <p><b>Baixar base</b> é um clique só e entrega uma única tabela: a <b>base detalhada do recorte
+      filtrado</b>, uma linha por registro do grão loja × mês × produto × fornecedor — o nível mais fino
+      que o modelo guarda. Cada linha traz loja, mês, material, unidade, hierarquia e fornecedor, e as
+      <b>sete medidas</b>, independentes da medida e da visão selecionadas na tela:
       <code>Lançamentos</code>, <code>Qtd entrada</code>, <code>Qtd saída</code>, <code>Qtd líquida</code>,
-      <code>R$ entrada</code>, <code>R$ saída</code> e <code>R$ resultado</code>. A aba <b>Base detalhada</b>
-      é uma linha por registro do grão loja × mês × produto × fornecedor — o nível mais fino que o modelo guarda.</p>
+      <code>R$ entrada</code>, <code>R$ saída</code> e <code>R$ resultado</code>.</p>
   </section>
 
   <section>
@@ -333,7 +333,7 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
       <li><b>Arredondamento.</b> O modelo guarda quantidade com 3 casas e valor com 2. As somas usam esses
         números já arredondados; a diferença possível é de meio centavo por registro.</li>
       <li><b>UN e KG somados.</b> A quantidade mistura as duas unidades (96.221 linhas em UN, 9.797 em KG).
-        Para um total homogêneo, use o filtro de unidade.</li>
+        A coluna <b>UM</b>, na tabela de itens e no arquivo baixado, permite separar quando isso importa.</li>
       <li><b>Sem dedução de duplicatas.</b> Como <code>MBLNR</code> não veio preenchido, não dá para separar
         linhas idênticas de documentos diferentes. As 5.923 repetições são mantidas e somam, igual ao relatório.</li>
       <li><b>Sinal coerente.</b> Em 106.018 linhas, o sinal do valor sempre acompanha o da quantidade —

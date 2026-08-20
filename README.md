@@ -96,15 +96,14 @@ inteiro. Com uma única loja no recorte o ranking de lojas sai da tela — uma b
 
 ## Exportar o recorte filtrado
 
-Botão **Baixar filtro**: um clique, um arquivo com exatamente o recorte que está na tela, em oito
-abas — filtros e totais, por loja, por mês, por 3º nó, por 4º nó, por fornecedor, por produto e a
-base detalhada no grão loja × mês × produto × fornecedor. Toda tabela traz as sete medidas (lançamentos, quantidade e reais, cada um
-em entrada, saída e resultado), independente da medida escolhida na tela.
+Botão **Baixar base**: um clique, um arquivo — a base detalhada do recorte filtrado, uma linha por
+registro do grão loja × mês × produto × fornecedor. Traz as sete medidas (lançamentos, quantidade e reais, cada um em entrada,
+saída e resultado), independente da medida escolhida na tela.
 
-- **.xlsx** — pasta completa, uma aba por recorte, com cabeçalho congelado, autofiltro e formato
-  numérico. Gerada em JS (zip com deflate via `CompressionStream`), sem biblioteca externa.
-- **.csv** — um recorte por arquivo, separador `;`, decimal com vírgula e BOM, abre direto no Excel
-  em português.
+- **.xlsx** — cabeçalho congelado, autofiltro e formato numérico. Gerado em JS (zip com deflate via
+  `CompressionStream`), sem biblioteca externa.
+- **.csv** — separador `;`, decimal com vírgula e BOM, abre direto no Excel em português. É o formato
+  usado onde o `.xlsx` não é permitido.
 
 O botão aparece quando salvar arquivo é possível: sempre no `dist/painel-trocas-avarias-offline.html` aberto
 direto no navegador; na versão publicada como Artifact, só com a capacidade `downloads`, que exige o
