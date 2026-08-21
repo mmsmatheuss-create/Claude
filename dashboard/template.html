@@ -313,7 +313,6 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
         <button type="button" data-v="liq">Resultado</button>
         <button type="button" data-v="in">Entradas</button>
         <button type="button" data-v="out">Saídas</button>
-        <button type="button" data-v="tot">Movimentação</button>
       </div>
     </div>
     <span class="sep"></span>
@@ -422,8 +421,7 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
       <summary>Como ler este painel</summary>
       <ul>
       <li><b>Entradas (+)</b> são os lançamentos com quantidade positiva no depósito de trocas e
-        <b>saídas (−)</b> os de quantidade negativa. <b>Líquido</b> = entradas − saídas;
-        <b>movimentação</b> = entradas + saídas (volume total tratado, independente do sinal).</li>
+        <b>saídas (−)</b> os de quantidade negativa. <b>Líquido</b> (ou resultado) = entradas − saídas.</li>
       <li>O <b>valor em reais</b> é sempre o <b>custo líquido</b> (<code>VERPR_LIQUIDO_TOTAL</code>) —
         custo de estoque, não preço de venda. <code>VERPR_BRUTO_TOTAL</code> é idêntico a ele em 100% das
         linhas e <code>VERPR_CSGM_TOTAL</code> ficou fora do modelo: nenhum cálculo do painel usa CSGM.</li>
@@ -513,7 +511,7 @@ function soma(A,i,r){ A.qi[i]+=r[5]; A.qo[i]+=r[6]; A.li[i]+=r[7]; A.lo[i]+=r[8]
 // a = lado das entradas, b = lado das saídas, na medida escolhida
 function par(A,i){ return S.medida==="qtd" ? [A.qi[i],A.qo[i]] : [A.li[i],A.lo[i]]; }
 function val(A,i){ const [a,b]=par(A,i);
-  return S.visao==="in"?a : S.visao==="out"?b : S.visao==="tot"?a+b : a-b; }
+  return S.visao==="in"?a : S.visao==="out"?b : a-b; }
 
 let D=null;   // recorte corrente
 function passa(r){
@@ -613,7 +611,7 @@ function colunas(host,dados){
   const W=Math.max(320,host.clientWidth), padT=14, padB=30, padL=52, H=278, plotH=H-padT-padB;
   const plotW=Math.max(40,W-padL-8), bw=plotW/dados.length, barW=Math.min(24,Math.max(2,bw-2.5));
   const modo=S.visao;
-  const tops=dados.map(d=> modo==="tot"? d.i+d.o : modo==="in"? d.i : modo==="out"? d.o : Math.max(0,d.i-d.o));
+  const tops=dados.map(d=> modo==="in"? d.i : modo==="out"? d.o : Math.max(0,d.i-d.o));
   const bots=dados.map(d=> modo==="liq"? Math.min(0,d.i-d.o) : 0);
   const hi=Math.max(0,...tops), lo=Math.min(0,...bots), span=(hi-lo)||1;
   const Y=v=>padT+plotH*(1-(v-lo)/span), zero=Y(0);
@@ -628,14 +626,12 @@ function colunas(host,dados){
   dados.forEach((d,i)=>{
     const cx=padL+bw*i+bw/2, x=cx-barW/2, g=sv("g",{});
     const seg=[];
-    if(modo==="tot"){ seg.push([0,d.i,cIn],[d.i,d.i+d.o,cOut]); }
-    else if(modo==="in"){ seg.push([0,d.i,cIn]); }
+    if(modo==="in"){ seg.push([0,d.i,cIn]); }
     else if(modo==="out"){ seg.push([0,d.o,cOut]); }
     else { const n=d.i-d.o; seg.push([0,n,n>=0?cIn:cOut]); }
     seg.forEach((sg,k)=>{
       const a=Y(sg[0]), b=Y(sg[1]); let y=Math.min(a,b), h=Math.abs(b-a);
       if(h<0.5) return;
-      if(modo==="tot"&&k===1){ y+=2; h=Math.max(0.5,h-2); }        // vao de 2px entre segmentos
       const r=Math.min(4,h/2);
       g.appendChild(sv("rect",{x:x,y:y,width:barW,height:h,rx:r,fill:sg[2]}));
       const base=(sg[1]>=sg[0]);                                    // extremo reto junto ao eixo
@@ -648,8 +644,7 @@ function colunas(host,dados){
     const hit=sv("rect",{x:padL+bw*i,y:padT,width:bw,height:plotH,fill:"transparent"});
     hit.addEventListener("pointermove",e=>tip(e.clientX,e.clientY,mesLongo(d.ym),[
       ["Entradas (+)",fmt(d.i)+" "+unidade(),cIn],["Saídas (−)",fmt(d.o)+" "+unidade(),cOut],null,
-      ["Líquido",fmt(d.i-d.o)+" "+unidade(),""],["Movimentação",fmt(d.i+d.o)+" "+unidade(),""],
-      ["Lançamentos",nf0.format(d.n),""]]));
+      ["Líquido",fmt(d.i-d.o)+" "+unidade(),""],["Lançamentos",nf0.format(d.n),""]]));
     hit.addEventListener("pointerleave",semTip);
     g.appendChild(hit); s.appendChild(g);
   });
@@ -723,7 +718,7 @@ function pintarAbas(id,painel){
 
 /* ---------- rotulos ---------- */
 const NM_MED={qtd:"Quantidade",liq:"Valor (R$)"};
-const NM_VIS={liq:"resultado (entradas − saídas)",in:"entradas (+)",out:"saídas (−)",tot:"movimentação (entradas + saídas)"};
+const NM_VIS={liq:"resultado (entradas − saídas)",in:"entradas (+)",out:"saídas (−)"};
 function rotulo(){ return NM_MED[S.medida]+" · "+NM_VIS[S.visao]; }
 function legenda(host,pares){ host.textContent="";
   pares.forEach(p=>{ const s=el("span"); s.appendChild(el("i",{class:"dot",style:"background:"+p[1]}));
@@ -744,10 +739,10 @@ function desenhar(){
   const kpis=[
     {k:"Quantidade líquida (un)",v:fmtQ(vq[0]-vq[1]),
      d:[["i","Entradas "+fmtQ(vq[0])],["o","Saídas "+fmtQ(vq[1])]]},
+    {k:"Valor de entrada (R$)",v:fmtM(vv[0]),
+     d:[["i","custo dos lançamentos positivos"]]},
     {k:"Resultado (R$)",v:fmtM(vv[0]-vv[1]),
-     d:[["i","Entradas "+curto(vv[0])],["o","Saídas "+curto(vv[1])]]},
-    {k:"Movimentado (R$)",v:fmtM(vv[0]+vv[1]),
-     d:[["","entradas + saídas, sem compensar sinal"]]},
+     d:[["o","Saídas "+curto(vv[1])]]},
     {k:"Lojas",v:nf0.format(nLoja),d:[["",nf0.format(LOJA.length)+" na base"]]},
     {k:"Produtos",v:nf0.format(nProd),d:[["",nf0.format(nForn)+" fornecedores"]]},
     {k:"Lançamentos",v:nf0.format(T.n[0]),d:[["","linhas do ZMMR270"]]}];
@@ -769,7 +764,7 @@ function desenhar(){
   const topL=lojas.slice().sort((a,b)=>Math.abs(b.v)-Math.abs(a.v)).slice(0,15).map(d=>({
     nm:d.nm, cd:d.cd, v:d.v,
     tip:(ci,co)=>[["Entradas (+)",fmt(d.p[0])+" "+unidade(),ci],["Saídas (−)",fmt(d.p[1])+" "+unidade(),co],null,
-      ["Líquido",fmt(d.p[0]-d.p[1])+" "+unidade(),""],["Movimentação",fmt(d.p[0]+d.p[1])+" "+unidade(),""],
+      ["Líquido",fmt(d.p[0]-d.p[1])+" "+unidade(),""],
       ["Lançamentos",nf0.format(d.n),""],["Loja",d.cd+" · "+d.uf,""]],
     click:()=>{ if(S.loja.has(d.ix)&&S.loja.size===1) S.loja.clear(); else { S.loja.clear(); S.loja.add(d.ix);} atualizar(); }
   }));
@@ -877,8 +872,7 @@ function desenhar(){
   $("cap-mes").textContent=rotulo()+" por mês de lançamento · "+unidade()+
     (S.visao==="liq"?" — barras acima do eixo são resultado positivo, abaixo negativo":"");
   colunas($("ch-mes"),meses);
-  legenda($("leg-mes"), S.visao==="tot"?[["Entradas (+)",cIn],["Saídas (−)",cOut]]
-    : S.visao==="liq"?[["Positivo",cIn],["Negativo",cOut]] : []);
+  legenda($("leg-mes"), S.visao==="liq"?[["Positivo",cIn],["Negativo",cOut]] : []);
   tabela($("t-mes"),[{t:"Mês"},{t:"Lanç."},{t:"Qtd entrada",qtd:1},{t:"Qtd saída",qtd:1},{t:"Qtd líquida",qtd:1},
     {t:"R$ entrada",money:1},{t:"R$ saída",money:1},{t:"R$ resultado",money:1}],
     meses.map(d=>[mesLongo(d.ym),d.n,d.q[0],d.q[1],d.q[0]-d.q[1],d.m[0],d.m[1],d.m[0]-d.m[1]]));

@@ -183,8 +183,8 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
             <td>→ <code>qo = 103</code> · <code>lo = 2.851,04</code></td></tr>
           <tr><td>Resultado</td><td class="f">656 − 103 = 553 un</td>
             <td class="f">18.158,08 − 2.851,04 = 15.307,04</td></tr>
-          <tr><td>Movimentação</td><td class="f">656 + 103 = 759 un</td>
-            <td class="f">18.158,08 + 2.851,04 = 21.009,12</td></tr>
+          <tr><td>Valor de entrada</td><td class="f">só o lado positivo</td>
+            <td class="f">li = 18.158,08</td></tr>
         </tbody>
       </table></div>
     </div>
@@ -227,7 +227,6 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
         <tr><td>Resultado</td><td class="f">a − b</td><td>o que sobrou no depósito, já compensado</td></tr>
         <tr><td>Entradas</td><td class="f">a</td><td>só o que entrou</td></tr>
         <tr><td>Saídas</td><td class="f">b</td><td>só o que saiu</td></tr>
-        <tr><td>Movimentação</td><td class="f">a + b</td><td>volume tratado, sem compensar sinal</td></tr>
       </tbody>
     </table></div>
     <p class="nota">Medida e visão mandam nos gráficos e nas listas de produto e fornecedor. Os indicadores
@@ -245,8 +244,8 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
       <tbody>
         <tr><td>Quantidade líquida (un)</td><td class="f w">Σqi − Σqo, somando todo o recorte</td></tr>
         <tr><td>↳ Entradas / Saídas</td><td class="f w">Σqi / Σqo</td></tr>
-        <tr><td>Resultado (R$)</td><td class="f w">Σli − Σlo</td></tr>
-        <tr><td>Movimentado (R$)</td><td class="f w">Σli + Σlo</td></tr>
+        <tr><td>Valor de entrada (R$)</td><td class="f w">Σli &nbsp;<i>— o custo dos lançamentos positivos</i></td></tr>
+        <tr><td>Resultado (R$)</td><td class="f w">Σli − Σlo &nbsp;<i>· abaixo, Σlo</i></td></tr>
         <tr><td>Lojas</td><td class="f w">lojas com Σn &gt; 0 &nbsp;<i>· “124 na base” = total do modelo</i></td></tr>
         <tr><td>Produtos</td><td class="f w">produtos com Σn &gt; 0 &nbsp;<i>· abaixo, fornecedores com Σn &gt; 0</i></td></tr>
         <tr><td>Lançamentos</td><td class="f w">Σn</td></tr>
@@ -302,9 +301,8 @@ footer{margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); colo
         <tr><td>Resultado</td><td class="f w">uma barra assinada: a − b, para cima se ≥ 0, para baixo se &lt; 0</td></tr>
         <tr><td>Entradas</td><td class="f w">uma barra: a</td></tr>
         <tr><td>Saídas</td><td class="f w">uma barra: b</td></tr>
-        <tr><td>Movimentação</td><td class="f w">duas empilhadas: a embaixo, b em cima — altura total a + b</td></tr>
         <tr><td>Rótulo solto</td><td class="f w">só no mês de maior |valor| do período</td></tr>
-        <tr><td>Tooltip</td><td class="f w">sempre os cinco: a, b, a − b, a + b e Σn</td></tr>
+        <tr><td>Tooltip</td><td class="f w">sempre os quatro: a, b, a − b e Σn</td></tr>
       </tbody>
     </table></div>
 

@@ -38,8 +38,8 @@ material) não vem preenchida. As demais colunas seguem a ordem do cabeçalho.
 | `fato` | loja × mês × produto × fornecedor | 106.018 linhas agregadas em 28.249 registros |
 
 Cada registro do fato guarda entradas e saídas separadas — `qi`/`qo` em quantidade e `li`/`lo`
-em reais — o que permite calcular no cliente resultado (entradas − saídas), movimentação
-(entradas + saídas) ou cada lado isolado, sem voltar à base. O valor em reais é sempre
+em reais — o que permite calcular no cliente o resultado (entradas − saídas) ou cada lado isolado,
+sem voltar à base. O valor em reais é sempre
 `VERPR_LIQUIDO_TOTAL`; `VERPR_CSGM_TOTAL` não entra no modelo.
 
 ## Cálculos
