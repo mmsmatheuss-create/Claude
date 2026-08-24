@@ -147,6 +147,12 @@ select.ctl{padding-right:8px; max-width:min(340px,100%)}
   border:1px dashed var(--axis); border-radius:10px; background:var(--surface-2); text-align:center}
 .drop:hover,.drop.on{border-color:var(--in); background:var(--in-soft)}
 .drop b{font-size:13.5px} .drop span{font-size:11.5px; color:var(--muted)}
+.pop textarea{width:100%; min-height:160px; resize:vertical; padding:10px 11px; border-radius:8px;
+  background:var(--surface-2); border:1px solid var(--hair); color:var(--ink);
+  font-family:"IBM Plex Mono",monospace; font-size:12.5px; line-height:1.65}
+.pop textarea:focus{border-color:var(--focus); outline:none; box-shadow:0 0 0 3px var(--in-soft)}
+.pop .linha{display:flex; gap:8px; align-items:center; margin-top:12px}
+.pop .acao{height:32px; font-size:13px}
 .chips{display:flex; flex-wrap:wrap; gap:6px; padding:0 0 14px; align-items:center}
 .chip{display:inline-flex; align-items:center; gap:7px; height:27px; padding:0 6px 0 11px; font-size:12px;
   background:var(--surface); border:1px solid var(--hair); border-radius:99px; color:var(--ink-2)}
@@ -300,6 +306,7 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
       <button type="button" class="ctl" id="f-loja" aria-expanded="false">Lojas <span class="cnt"></span><span class="car">▾</span></button>
       <button type="button" class="ctl" id="f-cat" aria-expanded="false">Categoria <span class="cnt"></span><span class="car">▾</span></button>
       <button type="button" class="ctl" id="f-forn" aria-expanded="false">Fornecedor <span class="cnt"></span><span class="car">▾</span></button>
+      <button type="button" class="ctl" id="f-mat" aria-expanded="false">Materiais <span class="cnt"></span><span class="car">▾</span></button>
       <button type="button" class="linkbtn" id="reset">Limpar</button>
     </div>
     <div class="spacer"></div>
@@ -428,9 +435,13 @@ footer code{font-family:"IBM Plex Mono",monospace; font-size:11.5px; background:
       <li><b>Atualizar dados</b> lê um novo export do ZMMR270 direto no seu navegador e refaz o painel
         inteiro — o arquivo não sai da sua máquina. A base carregada fica guardada neste navegador até
         você carregar outro export ou limpar pelo mesmo painel.</li>
-      <li><b>Baixar planilha</b> exporta exatamente o recorte que está filtrado. O botão só aparece onde
-        salvar arquivo é permitido: sempre na cópia local do painel (planilha .xlsx com uma aba por
-        recorte, ou .csv avulso) e, na versão publicada, quando o visualizador libera o download.</li>
+      <li><b>Materiais</b> aceita uma lista colada de códigos — vírgula, ponto e vírgula, espaço ou um
+        por linha, com ou sem zeros à esquerda. O painel avisa quantos reconheceu e quais não existem
+        na base.</li>
+      <li><b>Baixar base</b> entrega a base detalhada de exatamente o que está filtrado, uma linha por
+        registro do grão loja × mês × produto × fornecedor. O botão só aparece onde salvar arquivo é
+        permitido: sempre na cópia local do painel (.xlsx) e, na versão publicada, quando o visualizador
+        libera o download (.csv).</li>
       <li>A hierarquia de mercadoria vem em dois níveis: <b>Denominação 3º Nó</b>
         (<code>HIERNODE3</code>, 7 nós — PERECIVEIS, MERCEARIA ALIMENTO, BAZAR…) e
         <b>Denominação 4º Nó</b> (<code>HIERNODE4</code>, 28 nós dentro do 3º). Os filtros e o
@@ -466,12 +477,12 @@ function carregarModelo(modelo){
   P_CAT=new Int16Array(PROD.length); P_GRP=new Int16Array(PROD.length);
   PROD.forEach((p,i)=>{ P_CAT[i]=p[3]; P_GRP[i]=gIx[CAT[p[3]][2]]; });
   // os filtros guardam índices, que mudam junto com a base
-  S.m0=0; S.m1=MES.length-1; S.loja.clear(); S.cat.clear(); S.forn.clear();
+  S.m0=0; S.m1=MES.length-1; S.loja.clear(); S.cat.clear(); S.forn.clear(); S.mat.clear();
   S.busca=""; S.sort={k:"vn",d:-1}; S.buscaItem=""; S.sortItem={k:"qn",d:-1};
 }
 
 /* ---------- estado ---------- */
-const S={ m0:0, m1:0, loja:new Set(), cat:new Set(), forn:new Set(),
+const S={ m0:0, m1:0, loja:new Set(), cat:new Set(), forn:new Set(), mat:new Set(),
           medida:"qtd", visao:"liq", nivel:"n3", sort:{k:"vn",d:-1}, busca:"",
           sortItem:{k:"qn",d:-1}, buscaItem:"" };
 
@@ -519,6 +530,7 @@ function passa(r){
   if(m<S.m0||m>S.m1) return false;
   if(S.loja.size&&!S.loja.has(r[0])) return false;
   if(S.forn.size&&!S.forn.has(r[3])) return false;
+  if(S.mat.size&&!S.mat.has(r[2])) return false;
   if(S.cat.size&&!S.cat.has(P_CAT[r[2]])) return false;
   return true;
 }
@@ -903,6 +915,8 @@ function chips(){
   if(S.loja.size)  add("Lojas", nomes(S.loja,LOJA,1),  ()=>S.loja.clear());
   if(S.cat.size)   add("Categoria", nomes(S.cat,CAT,1),()=>S.cat.clear());
   if(S.forn.size)  add("Fornecedor", nomes(S.forn,FORN,1),()=>S.forn.clear());
+  if(S.mat.size)   add("Materiais", nf0.format(S.mat.size)+(S.mat.size===1?" código":" códigos"),
+                       ()=>S.mat.clear());
   if(S.busca)      add("Busca em lojas", S.busca, ()=>{S.busca="";$("q-loja").value="";});
   if(S.buscaItem)  add("Busca em itens", S.buscaItem, ()=>{S.buscaItem="";$("q-item").value="";});
 }
@@ -1302,7 +1316,7 @@ async function entregar(nome,dados,mime,status,permitirTxt){
 }
 function sufixo(){
   const d=new Date(), p=n=>String(n).padStart(2,"0");
-  const filtrado=(S.loja.size||S.cat.size||S.forn.size||
+  const filtrado=(S.loja.size||S.cat.size||S.forn.size||S.mat.size||
     S.m0!==0||S.m1!==MES.length-1)?"-filtrado":"";
   return filtrado+"-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate());
 }
@@ -1434,6 +1448,55 @@ function montarBase(pop){
   pop.appendChild(corpo);
 }
 
+/* ---------- filtro por lista de materiais ---------- */
+function aplicarMateriais(texto,status){
+  // aceita virgula, ponto e virgula, quebra de linha, tabulacao ou espaco
+  const cods=texto.split(/[^0-9A-Za-z]+/).filter(Boolean).map(c=>c.replace(/^0+/,"").toUpperCase());
+  if(!cods.length){ S.mat.clear(); atualizar(); status("Lista vazia — o filtro de materiais foi limpo."); return; }
+  const ix={}; PROD.forEach((pr,i)=>{ ix[String(pr[0]).toUpperCase()]=i; });
+  const achados=new Set(), faltando=[];
+  cods.forEach(c=>{ const i=ix[c];
+    if(i!==undefined) achados.add(i);
+    else if(faltando.indexOf(c)<0) faltando.push(c); });
+  S.mat=achados; atualizar();
+  if(!achados.size){ status("Nenhum dos "+nf0.format(cods.length)+" códigos existe na base carregada."); return; }
+  status(nf0.format(achados.size)+(achados.size===1?" material aplicado":" materiais aplicados")+
+    " de "+nf0.format(cods.length)+" códigos colados."+
+    (faltando.length? " Não encontrados ("+faltando.length+"): "+faltando.slice(0,12).join(", ")+
+      (faltando.length>12?"…":"") : ""));
+}
+
+function montarMateriais(pop){
+  const head=el("div",{class:"pop-head"});
+  head.appendChild(el("h4",{text:"Filtrar por lista de materiais"}));
+  const x=el("button",{class:"pop-x",type:"button","aria-label":"Fechar"});
+  x.textContent="×"; x.addEventListener("click",()=>pop.__fechar&&pop.__fechar());
+  head.appendChild(x); arrastar(pop,head); pop.appendChild(head);
+
+  const corpo=el("div",{class:"pop-body"});
+  corpo.appendChild(el("p",{class:"hint",text:"Cole os códigos de material separados por vírgula, "+
+    "ponto e vírgula, espaço ou um por linha — como vierem do Excel. Zeros à esquerda são ignorados. "+
+    "O painel inteiro e o arquivo baixado passam a mostrar só esses itens."}));
+  const ta=el("textarea",{placeholder:"1000034076, 1000034278, 1000016988",
+    "aria-label":"Códigos de material"});
+  ta.value=[...S.mat].map(i=>PROD[i][0]).join(", ");
+  corpo.appendChild(ta);
+  const st=el("p",{class:"status"});
+  const status=t=>{ st.textContent=t; };
+  const linha=el("div",{class:"linha"});
+  const ok=el("button",{class:"acao",type:"button",text:"Aplicar"});
+  ok.addEventListener("click",()=>aplicarMateriais(ta.value,status));
+  const lim=el("button",{class:"linkbtn",type:"button",text:"Limpar lista"});
+  lim.addEventListener("click",()=>{ ta.value=""; S.mat.clear(); atualizar();
+    status("Filtro de materiais limpo."); });
+  linha.appendChild(ok); linha.appendChild(lim);
+  corpo.appendChild(linha); corpo.appendChild(st);
+  ta.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="Enter") ok.click(); });
+  pop.appendChild(corpo);
+  if(S.mat.size) status(nf0.format(S.mat.size)+" materiais no filtro atual.");
+  setTimeout(()=>ta.focus(),30);
+}
+
 /* ---------- controles ---------- */
 const contadores=[];
 function seg(id,campo,attr,depois){
@@ -1446,6 +1509,9 @@ function sincronizar(){
   $("visao").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===S.visao)));
   $("nivel").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.n===S.nivel)));
   contadores.forEach(c=>c.atualizarContador());
+  const bm=$("f-mat"), cm=bm&&bm.querySelector(".cnt");
+  if(cm){ cm.textContent = S.mat.size? String(S.mat.size):""; cm.hidden=!S.mat.size;
+    bm.classList.toggle("on", S.mat.size>0); }
 }
 
 function renderMeta(){
@@ -1518,7 +1584,7 @@ function iniciar(){
     if(v===-2) return;
     S.loja.clear(); if(v>=0) S.loja.add(v); atualizar(); });
   $("reset").addEventListener("click",()=>{ S.m0=0; S.m1=MES.length-1;
-    S.loja.clear(); S.cat.clear(); S.forn.clear();
+    S.loja.clear(); S.cat.clear(); S.forn.clear(); S.mat.clear();
     S.busca=""; $("q-loja").value="";
     S.buscaItem=""; $("q-item").value=""; atualizar(); });
 
@@ -1529,6 +1595,7 @@ function iniciar(){
   new MutationObserver(()=>desenhar()).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
   popSimples("b-base",montarBase);
+  popSimples("f-mat",montarMateriais);
   $("b-exp").addEventListener("click",baixarFiltro);
   zonaArquivo($("drop-vazio"),t=>{ $("status-vazio").textContent=t; });
   if(MODELO_ORIGINAL) aplicarModelo(MODELO_ORIGINAL); else mostrarVazio(true);

@@ -94,6 +94,13 @@ qualquer coluna, busca por descrição, código, categoria ou fornecedor, e fech
 com a linha da loja na tabela acima. O seletor é o filtro global de loja: mudá-lo reescreve o painel
 inteiro. Com uma única loja no recorte o ranking de lojas sai da tela — uma barra só não é gráfico.
 
+## Filtro por lista de materiais
+
+O botão **Materiais** abre uma caixa onde se cola a lista de códigos — vírgula, ponto e vírgula,
+espaço ou um por linha, com ou sem zeros à esquerda, do jeito que sai do Excel. O painel responde
+quantos reconheceu e quais não existem na base carregada, e a partir daí tudo — indicadores,
+gráficos, tabelas e o arquivo baixado — passa a considerar só esses itens.
+
 ## Exportar o recorte filtrado
 
 Botão **Baixar base**: um clique, um arquivo — a base detalhada do recorte filtrado, uma linha por
